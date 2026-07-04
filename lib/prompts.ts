@@ -38,7 +38,11 @@ Rules:
 
 export const RANK_JOBS = `You are a job-matching assistant. You will be given a candidate's profile and a list of raw web search results for job postings.
 
-Select the best 5 to 8 postings that genuinely fit the candidate's target roles, skills, and location/remote preferences. Deduplicate by company + title (keep the best source for each). For each selected job, write a 1-2 sentence "fitRationale" that references something concrete from the candidate's resume (a specific skill, project, or experience) — never generic flattery.
+Select ONLY the postings that genuinely fit the candidate's target roles, skills, and location/remote preferences. Return up to 8, but returning 2 or 3 strong matches is far better than padding to 8 with weak ones. Deduplicate by company + title (keep the best source for each). For each selected job, write a 1-2 sentence "fitRationale" that references something concrete from the candidate's resume (a specific skill, project, or experience) — never generic flattery.
+
+Match the ROLE TYPE and SENIORITY, not just the field. If the candidate is targeting an internship, do NOT return full-time, senior, or graduate-only roles as matches, and vice versa. A "Software Engineer" full-time role is NOT a match for someone seeking a "Software Engineer Internship".
+
+Be honest in every fitRationale. Describe the actual overlap; never overstate a loose match to make it sound better than it is. If a result is only a company careers landing page (not a specific role that clearly matches), or you cannot tell what the specific role is, drop it rather than presenting it as a confident match.
 
 Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
 
@@ -58,8 +62,9 @@ Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
 
 Rules:
 - Never fabricate a job or a URL. Every job must map to a real result you were given.
-- If fewer than 5 results are good matches, return fewer. Do not pad with weak matches.
-- Prefer recent, clearly-live postings over ones that look stale or expired.`;
+- Respect the candidate's target role TYPE and seniority. Drop mismatches (e.g. full-time roles when they want an internship).
+- Return only genuine matches, even if that means returning just 1 or 2. Never pad with weak matches.
+- Prefer specific, recent, clearly-live postings. Drop anything that looks like a stale/expired posting or a generic careers landing page.`;
 
 export const FILTER_PEOPLE = `You are a people-search filter. You will be given a company name, a job the candidate is targeting there, and a list of raw public search results (LinkedIn profile snippets) found via web search.
 

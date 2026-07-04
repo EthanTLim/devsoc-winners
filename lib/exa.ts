@@ -55,7 +55,9 @@ export async function searchJobsExa(query: string, opts?: { numResults?: number 
     query,
     numResults: opts?.numResults ?? 10,
     type: "auto",
-    category: "company",
+    // "job posting" makes Exa return actual listing pages you can apply on,
+    // not company homepages (which "company" returned).
+    category: "job posting",
     contents: {
       text: true,
     },

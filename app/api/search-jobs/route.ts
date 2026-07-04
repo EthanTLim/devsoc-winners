@@ -8,6 +8,8 @@ export const runtime = "nodejs";
 
 const RequestSchema = z.object({
   profile: ProfileSchema,
+  // URLs already shown to the user, so "Find more" never re-returns them.
+  excludeUrls: z.array(z.string()).optional(),
 });
 
 // The LLM ranking pass returns jobs without an id (we assign a real uuid
@@ -17,19 +19,34 @@ const RankedJobsSchema = z.object({
   jobs: z.array(RankedJobSchema),
 });
 
-function buildQueries(profile: z.infer<typeof ProfileSchema>): string[] {
+function buildQueries(
+  profile: z.infer<typeof ProfileSchema>,
+  more = false
+): string[] {
   const role = profile.targetRoles[0] ?? "job";
+  const altRole = profile.targetRoles[1] ?? role;
   const location =
     profile.preferences.locations[0] ?? profile.location ?? "";
   const topSkill = profile.skills[0] ?? "";
+  const secondSkill = profile.skills[1] ?? topSkill;
 
-  const queries = [
-    `${role} ${location} job posting`.trim(),
-    `${role} careers remote hiring now`.trim(),
-    topSkill
-      ? `hiring ${role} with ${topSkill} experience`.trim()
-      : `hiring ${role} now`.trim(),
-  ];
+  // On a "find more" pass, use a different set of phrasings so Exa surfaces
+  // fresh postings rather than the same top hits.
+  const queries = more
+    ? [
+        `${altRole} ${location} apply now`.trim(),
+        secondSkill
+          ? `${role} jobs ${secondSkill} ${location}`.trim()
+          : `${role} openings ${location}`.trim(),
+        `${role} vacancy ${location} hiring`.trim(),
+      ]
+    : [
+        `${role} ${location} job posting`.trim(),
+        `${role} careers remote hiring now`.trim(),
+        topSkill
+          ? `hiring ${role} with ${topSkill} experience`.trim()
+          : `hiring ${role} now`.trim(),
+      ];
 
   return queries.filter((q) => q.trim().length > 0);
 }
@@ -57,15 +74,20 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { profile } = RequestSchema.parse(body);
+    const { profile, excludeUrls } = RequestSchema.parse(body);
+    const isMore = Array.isArray(excludeUrls) && excludeUrls.length > 0;
+    const excluded = new Set(excludeUrls ?? []);
 
-    const queries = buildQueries(profile);
+    const queries = buildQueries(profile, isMore);
 
     const searchResults = await withRetry(async () => {
       const responses = await Promise.all(
         queries.map((q) => searchJobsExa(q, { numResults: 10 }))
       );
-      return dedupeByUrl(responses.flatMap((r) => r.results));
+      // Drop anything the user has already been shown before ranking.
+      return dedupeByUrl(responses.flatMap((r) => r.results)).filter(
+        (r) => !excluded.has(r.url)
+      );
     });
 
     if (searchResults.length === 0) {
