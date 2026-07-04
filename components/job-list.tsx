@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { SearchX, TriangleAlert } from "lucide-react";
+import { toast } from "sonner";
+import { Plus, SearchX, TriangleAlert } from "lucide-react";
 import type { JobMatch } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -34,6 +35,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   const toggleJobSelected = useAppState((s) => s.toggleJobSelected);
 
   const [fetchState, setFetchState] = useState<FetchState>("idle");
+  const [loadingMore, setLoadingMore] = useState(false);
   const hasStarted = useRef(false);
 
   // In demo mode the page passes fixture jobs in as a prop. In live mode the
@@ -42,15 +44,21 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   // only use the prop as the demo override.
   const displayJobs = isDemo ? propJobs ?? jobs : jobs;
 
-  async function runSearch() {
+  async function runSearch(mode: "initial" | "more" = "initial") {
     if (!profile) return;
-    setFetchState("loading");
+    if (mode === "more") {
+      setLoadingMore(true);
+    } else {
+      setFetchState("loading");
+    }
 
     try {
+      const excludeUrls =
+        mode === "more" ? jobs.map((j) => j.url) : undefined;
       const res = await fetch("/api/search-jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile }),
+        body: JSON.stringify({ profile, excludeUrls }),
       });
 
       if (!res.ok || !res.body) {
@@ -90,10 +98,20 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
         }
       }
 
-      setFetchState("done");
+      if (mode === "more") {
+        setLoadingMore(false);
+      } else {
+        setFetchState("done");
+      }
     } catch (err) {
       console.error("[job-list] search failed:", err);
-      setFetchState("error");
+      if (mode === "more") {
+        // Keep the jobs already on screen; just surface a toast.
+        setLoadingMore(false);
+        toast.error("Couldn't load more jobs. Please try again.");
+      } else {
+        setFetchState("error");
+      }
     }
   }
 
@@ -179,16 +197,47 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   }
 
   return (
-    <ul className="flex flex-col gap-3" aria-label="Job matches">
-      {displayJobs.map((job, index) => (
-        <JobCard
-          key={job.id}
-          job={job}
-          selected={selectedJobIds.includes(job.id)}
-          onToggleSelected={toggleJobSelected}
-          delay={staggerDelay(index)}
-        />
-      ))}
-    </ul>
+    <div className="flex flex-col gap-3">
+      <ul className="flex flex-col gap-3" aria-label="Job matches">
+        {displayJobs.map((job, index) => (
+          <JobCard
+            key={job.id}
+            job={job}
+            selected={selectedJobIds.includes(job.id)}
+            onToggleSelected={toggleJobSelected}
+            delay={staggerDelay(index)}
+          />
+        ))}
+      </ul>
+
+      {loadingMore && (
+        <div className="flex flex-col gap-3" aria-label="Loading more jobs" aria-busy="true">
+          {[0, 1].map((i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
+              style={{ opacity: 1 - i * 0.15 }}
+            >
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-4 w-full" />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!isDemo && (
+        <Button
+          onClick={() => runSearch("more")}
+          disabled={loadingMore}
+          variant="outline"
+          size="sm"
+          className="self-center"
+        >
+          <Plus className="size-4" aria-hidden="true" />
+          {loadingMore ? "Finding more..." : "Find more jobs"}
+        </Button>
+      )}
+    </div>
   );
 }
