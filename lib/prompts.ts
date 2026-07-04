@@ -65,11 +65,10 @@ Rules:
 - Never fabricate a job or a URL. Every job must map to a real result you were given.
 - Respect the candidate's target role TYPE and seniority. Drop mismatches (e.g. full-time roles when they want an internship).
 - Return only genuine matches, even if that means returning just 1 or 2. Never pad with weak matches.
-- Prefer specific, recent, clearly-live postings. Drop anything that looks like a stale/expired posting or a generic careers landing page.
-- DROP any posting whose text indicates it is closed, expired, filled, or no longer accepting applications (e.g. "this position is closed", "no longer accepting applications", "applications have closed", "job has expired") even if it otherwise looks like a good fit.
-- DROP any posting whose stated closing/deadline date has clearly already passed relative to its publishedDate or to other context in the text. If a deadline is mentioned and looks past, exclude the job rather than including it with a stale deadline.
-- DROP postings that otherwise read as clearly old or stale (e.g. referencing a past hiring cycle, an old intake/semester/year, or context that no longer applies) even without an explicit "closed" statement.
-- When genuinely unsure whether a posting is still open, prefer to keep it (this is only a bias, not a certainty), but always drop postings with an explicit closed/expired/filled signal in the text.
+- Prefer specific postings over generic careers landing pages.
+- DROP a posting ONLY when its text contains an EXPLICIT closed/expired signal, e.g. "this position is closed", "no longer accepting applications", "applications have closed", "job has expired", "position has been filled". Do not drop a job just because it feels old, references a future intake year (e.g. "2026/2027 internship"), or lacks a date. Those are normal for live postings.
+- If a posting states a closing date and that date has CLEARLY already passed, drop it. Otherwise keep it.
+- Default to KEEPING a genuinely-matching posting. Freshness is already handled by the search-side recency filter, so do not over-filter here. Returning a solid set of real matches matters more than being cautious.
 - Only include "deadline" when an explicit closing/deadline date is present in the given text. If unsure or no date appears, omit the key entirely. Never guess, infer from publishedDate, or invent a date.`;
 
 export const FILTER_PEOPLE = `You are a people-search filter. You will be given a company name, a job the candidate is targeting there, and a list of raw public search results (LinkedIn profile snippets) found via web search.

@@ -243,7 +243,11 @@ async function dropDeadJobs<T extends { url: string }>(
 // page (closed status shown only via client-side JS) can still slip through
 // all three layers — reliably catching that would need a headless browser
 // to execute the page's JS, which is out of scope here.
-const FRESHNESS_WINDOW_DAYS = 45;
+// Bias toward recent postings without starving results. 45 days was too tight
+// (many still-open internship postings were first published months ago and got
+// filtered out at the Exa level), so use a wider window and lean on the LLM's
+// closed/stale drop rules for finer filtering.
+const FRESHNESS_WINDOW_DAYS = 120;
 
 function getStartPublishedDate(): string {
   const d = new Date();
