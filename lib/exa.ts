@@ -56,7 +56,15 @@ async function exaSearch(body: Record<string, unknown>): Promise<ExaSearchRespon
  */
 export async function searchJobsExa(
   query: string,
-  opts?: { numResults?: number; includeDomains?: string[] }
+  opts?: {
+    numResults?: number;
+    includeDomains?: string[];
+    // ISO date string (e.g. "2025-05-20"). Restricts results to postings
+    // Exa has indexed as published on/after this date, biasing hard toward
+    // fresh listings so stale/closed postings are less likely to surface at
+    // all (in addition to the ranking-LLM and dead-link checks downstream).
+    startPublishedDate?: string;
+  }
 ): Promise<ExaSearchResponse> {
   return exaSearch({
     query,
@@ -66,6 +74,9 @@ export async function searchJobsExa(
     // not company homepages (which "company" returned).
     category: "job posting",
     ...(opts?.includeDomains ? { includeDomains: opts.includeDomains } : {}),
+    ...(opts?.startPublishedDate
+      ? { startPublishedDate: opts.startPublishedDate }
+      : {}),
     contents: {
       text: true,
     },
