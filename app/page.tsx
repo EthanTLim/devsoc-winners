@@ -1,10 +1,7 @@
-import Link from "next/link";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { UploadDropzone } from "@/components/upload-dropzone";
 
-// Landing page shell: hero + one CTA + a placeholder slot for the real
-// upload-dropzone component, which a feature agent builds separately
-// (components/upload-dropzone.tsx). Kept intentionally bare.
+// Landing page shell: hero + one CTA + the real upload-dropzone component
+// (components/upload-dropzone.tsx), wired to /api/parse-resume.
 
 export default function Home() {
   return (
@@ -23,22 +20,9 @@ export default function Home() {
           behind them, and drafts the message that gets you in the door.
         </p>
 
-        {/* Upload dropzone slot — a feature agent replaces this with
-            components/upload-dropzone.tsx wired to /api/parse-resume. */}
-        <div
-          className="flex w-full flex-col items-center gap-4 rounded-xl border border-dashed border-border bg-card/50 p-10"
-          aria-label="Resume upload area placeholder"
-        >
-          <p className="text-sm text-muted-foreground">
-            Upload dropzone goes here
-          </p>
-          <Link
-            href="/review"
-            className={cn(buttonVariants({ size: "lg" }), "px-6")}
-          >
-            Upload your resume
-          </Link>
-        </div>
+        {/* upload-slot */}
+        <UploadDropzone />
+        {/* /upload-slot */}
       </div>
     </main>
   );
