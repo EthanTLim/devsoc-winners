@@ -134,19 +134,26 @@ export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
 
   if (fetchState === "loading") {
     return (
-      <div className="flex flex-col gap-3" aria-label="Loading potential firms" aria-busy="true">
+      <div
+        className="flex flex-col gap-3"
+        aria-label="Loading potential firms"
+        aria-busy="true"
+      >
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
+            className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5"
             style={{ opacity: 1 - i * 0.12 }}
           >
             <div className="flex items-start justify-between gap-3">
-              <div className="flex flex-1 flex-col gap-2">
-                <Skeleton className="h-5 w-2/3" />
-                <Skeleton className="h-4 w-1/3" />
+              <div className="flex flex-1 items-start gap-3">
+                <Skeleton className="size-10 shrink-0 rounded-lg" />
+                <div className="flex flex-1 flex-col gap-2">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="h-3.5 w-1/3" />
+                </div>
               </div>
-              <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+              <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
             </div>
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-4/5" />
@@ -159,7 +166,7 @@ export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   if (fetchState === "error") {
     return (
       <div
-        className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-destructive/40 bg-card/50 p-10 text-center"
+        className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-destructive/40 bg-card/50 p-10 text-center"
         role="alert"
       >
         <TriangleAlert className="h-6 w-6 text-destructive" aria-hidden="true" />
@@ -179,7 +186,7 @@ export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   if (displayJobs.length === 0) {
     return (
       <div
-        className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card/50 p-10 text-center"
+        className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center"
         aria-label="No potential firms yet"
       >
         <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
@@ -199,8 +206,11 @@ export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <ul className="flex flex-col gap-3" aria-label="Potential firms">
+    <div className="flex flex-col gap-4">
+      <ul
+        className="flex flex-col gap-3"
+        aria-label="Potential firms"
+      >
         {displayJobs.map((job, index) => (
           <ProspectFirmCard
             key={job.id}
@@ -213,11 +223,15 @@ export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
       </ul>
 
       {loadingMore && (
-        <div className="flex flex-col gap-3" aria-label="Loading more potential firms" aria-busy="true">
+        <div
+          className="flex flex-col gap-3"
+          aria-label="Loading more potential firms"
+          aria-busy="true"
+        >
           {[0, 1].map((i) => (
             <div
               key={i}
-              className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
+              className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-5"
               style={{ opacity: 1 - i * 0.15 }}
             >
               <Skeleton className="h-5 w-2/3" />
@@ -234,7 +248,7 @@ export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
           disabled={loadingMore}
           variant="outline"
           size="sm"
-          className="self-center"
+          className="self-center rounded-full"
         >
           <Plus className="size-4" aria-hidden="true" />
           {loadingMore ? "Finding more..." : "Find more firms"}

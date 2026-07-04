@@ -150,7 +150,7 @@ export function DraftPanel({ contact }: DraftPanelProps) {
   if (!contact) {
     return (
       <div
-        className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10"
+        className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10"
         aria-label="Draft panel placeholder"
       >
         <p className="text-sm text-muted-foreground">
@@ -161,21 +161,32 @@ export function DraftPanel({ contact }: DraftPanelProps) {
   }
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-4">
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-foreground">
-          Message to {contact.name}
-        </p>
-        <p className="text-xs text-muted-foreground">
-          {contact.title} at {contact.company}
-          {job ? ` · re: ${job.title}` : ""}
-        </p>
+    <div className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-5">
+      <div className="flex flex-col gap-2">
+        <h3 className="text-[15px] font-semibold text-foreground">Draft message</h3>
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">
+            To <span className="font-medium text-foreground">{contact.name}</span>
+            {job ? ` · re: ${job.title}` : ""}
+          </p>
+          <button
+            type="button"
+            onClick={() => toast("Pick a different contact from the list to change this")}
+            className="shrink-0 text-xs font-medium text-primary hover:underline"
+          >
+            Change
+          </button>
+        </div>
       </div>
 
       <Tabs value={tone} onValueChange={handleToneChange}>
-        <TabsList aria-label="Message tone">
+        <TabsList aria-label="Message tone" className="w-full rounded-full bg-muted p-1">
           {TONES.map((t) => (
-            <TabsTrigger key={t} value={t} className="capitalize">
+            <TabsTrigger
+              key={t}
+              value={t}
+              className="flex-1 rounded-full capitalize data-[active]:bg-primary data-[active]:text-primary-foreground data-[active]:shadow-none"
+            >
               {t}
             </TabsTrigger>
           ))}
@@ -211,24 +222,23 @@ export function DraftPanel({ contact }: DraftPanelProps) {
         ))}
       </Tabs>
 
-      <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+      <div className="mt-auto flex flex-col gap-2 border-t border-border pt-4">
         <Button
-          size="sm"
+          className="w-full rounded-full"
+          onClick={handleCopy}
+          disabled={status !== "done" || !draft}
+          aria-label="Copy draft message"
+        >
+          {copied ? "Copied" : "Copy message"}
+        </Button>
+        <Button
           variant="ghost"
+          className="w-full"
           onClick={handleRegenerate}
           disabled={status === "loading"}
           aria-label="Regenerate draft message"
         >
           Regenerate
-        </Button>
-        <Button
-          size="sm"
-          variant={copied ? "secondary" : "outline"}
-          onClick={handleCopy}
-          disabled={status !== "done" || !draft}
-          aria-label="Copy draft message"
-        >
-          {copied ? "Copied" : "Copy"}
         </Button>
       </div>
     </div>
