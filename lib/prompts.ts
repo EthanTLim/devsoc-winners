@@ -55,7 +55,8 @@ Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
       "location": string,
       "url": string,         // must be one of the URLs given in the search results, never invented
       "source": string,      // the domain the posting was found on
-      "fitRationale": string
+      "fitRationale": string,
+      "deadline": string     // OPTIONAL: application closing/deadline date, ONLY if a real date genuinely appears in the posting text (e.g. "Applications close 15 August 2025"). Omit this key entirely if no such date appears. NEVER guess or invent a date.
     }
   ]
 }
@@ -64,7 +65,8 @@ Rules:
 - Never fabricate a job or a URL. Every job must map to a real result you were given.
 - Respect the candidate's target role TYPE and seniority. Drop mismatches (e.g. full-time roles when they want an internship).
 - Return only genuine matches, even if that means returning just 1 or 2. Never pad with weak matches.
-- Prefer specific, recent, clearly-live postings. Drop anything that looks like a stale/expired posting or a generic careers landing page.`;
+- Prefer specific, recent, clearly-live postings. Drop anything that looks like a stale/expired posting or a generic careers landing page.
+- Only include "deadline" when an explicit closing/deadline date is present in the given text. If unsure or no date appears, omit the key entirely. Never guess, infer from publishedDate, or invent a date.`;
 
 export const FILTER_PEOPLE = `You are a people-search filter. You will be given a company name, a job the candidate is targeting there, and a list of raw public search results (LinkedIn profile snippets) found via web search.
 
