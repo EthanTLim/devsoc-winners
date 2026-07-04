@@ -47,6 +47,10 @@ export const JobMatchSchema = z.object({
   source: z.string(),
   fitRationale: z.string(),
   fitScore: z.number().optional(),
+  // Application closing/deadline date, only ever set when a real date
+  // genuinely appears in the posting text. Optional so existing data
+  // (and jobs with no stated deadline) still validate.
+  deadline: z.string().optional(),
 });
 export type JobMatch = z.infer<typeof JobMatchSchema>;
 

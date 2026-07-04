@@ -68,6 +68,14 @@ export function JobCard({ job, selected, onToggleSelected, delay = 0 }: JobCardP
           {job.fitRationale}
         </p>
 
+        <p className="text-xs text-muted-foreground/80">
+          {job.deadline ? (
+            <>Apply by {job.deadline}</>
+          ) : (
+            <>Deadline not listed</>
+          )}
+        </p>
+
         <div className="flex items-center justify-between gap-3 pt-1">
           <Badge variant="outline" className="font-normal text-muted-foreground">
             {sourceDomain(job)}
