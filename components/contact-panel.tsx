@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Contact, JobMatch } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { ContactCard } from "@/components/contact-card";
@@ -18,14 +19,24 @@ type ContactPanelProps = {
 type JobStatus = "idle" | "loading" | "done" | "error";
 
 export function ContactPanel({ contacts }: ContactPanelProps) {
-  const jobs = useAppState((state) => state.jobs);
+  const searchParams = useSearchParams();
+  const isDemo = searchParams.get("demo") === "1";
+
+  const allJobs = useAppState((state) => state.jobs);
+  const selectedJobIds = useAppState((state) => state.selectedJobIds);
   const addContact = useAppState((state) => state.addContact);
   const setActiveContact = useAppState((state) => state.setActiveContact);
+
+  // Only look for people at the jobs the user has actually starred. This keeps
+  // the people search intentional (and avoids firing Exa/LLM calls at every
+  // job the moment results stream in).
+  const selectedJobs = allJobs.filter((job) => selectedJobIds.includes(job.id));
 
   const [statusByJobId, setStatusByJobId] = useState<Record<string, JobStatus>>({});
 
   useEffect(() => {
-    const jobsNeedingContacts = jobs.filter((job) => {
+    if (isDemo) return; // demo mode renders fixture contacts, no live fetch
+    const jobsNeedingContacts = selectedJobs.filter((job) => {
       const hasContacts = contacts.some((c) => c.jobId === job.id);
       const status = statusByJobId[job.id];
       return !hasContacts && (!status || status === "idle");
@@ -53,16 +64,44 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
         });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobs, contacts]);
+  }, [selectedJobs, contacts, isDemo]);
 
-  if (jobs.length === 0) {
+  // Demo mode: render the captured fixture contacts directly, ungated by
+  // selection, so the pitch replay shows the full flow with no clicks.
+  if (isDemo) {
+    if (contacts.length === 0) {
+      return (
+        <div
+          className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10"
+          aria-label="No contacts"
+        >
+          <p className="text-sm text-muted-foreground">
+            Real contacts at each company go here
+          </p>
+        </div>
+      );
+    }
+    return (
+      <ul className="flex flex-col gap-3" aria-label="Contacts">
+        {contacts.map((contact) => (
+          <li key={contact.id}>
+            <ContactCard contact={contact} onDraft={setActiveContact} />
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
+  if (selectedJobs.length === 0) {
     return (
       <div
-        className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10"
-        aria-label="Contact panel placeholder"
+        className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10 text-center"
+        aria-label="No jobs starred yet"
       >
         <p className="text-sm text-muted-foreground">
-          Real contacts at each company go here
+          {allJobs.length === 0
+            ? "Real contacts at each company go here"
+            : "Star a job to find real people at that company"}
         </p>
       </div>
     );
@@ -70,7 +109,7 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
 
   return (
     <ul className="flex flex-col gap-3" aria-label="Contacts">
-      {jobs.map((job) => {
+      {selectedJobs.map((job) => {
         const jobContacts = contacts.filter((c) => c.jobId === job.id);
         const status = statusByJobId[job.id] ?? "idle";
 

@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Inroad — from resume to a real inbox",
+  title: "Inroad: from resume to a real inbox",
   description:
     "Upload your resume. Inroad finds live job matches, real people at those companies, and drafts the outreach message that gets you in the door.",
 };

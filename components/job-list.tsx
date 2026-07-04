@@ -30,9 +30,10 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   const profile = useAppState((s) => s.profile);
   const jobs = useAppState((s) => s.jobs);
   const addJob = useAppState((s) => s.addJob);
+  const selectedJobIds = useAppState((s) => s.selectedJobIds);
+  const toggleJobSelected = useAppState((s) => s.toggleJobSelected);
 
   const [fetchState, setFetchState] = useState<FetchState>("idle");
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const hasStarted = useRef(false);
 
   const displayJobs = propJobs ?? jobs;
@@ -101,18 +102,6 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
     runSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile, jobs.length, isDemo, propJobs]);
-
-  function toggleSelected(id: string) {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  }
 
   function handleRetry() {
     hasStarted.current = true;
@@ -186,8 +175,8 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
         <JobCard
           key={job.id}
           job={job}
-          selected={selectedIds.has(job.id)}
-          onToggleSelected={toggleSelected}
+          selected={selectedJobIds.includes(job.id)}
+          onToggleSelected={toggleJobSelected}
           delay={staggerDelay(index)}
         />
       ))}

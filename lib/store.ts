@@ -7,6 +7,7 @@ type AppState = {
   jobs: JobMatch[];
   contacts: Contact[];
   activeContactId: string | null;
+  selectedJobIds: string[];
 
   setProfile: (profile: Profile | null) => void;
   setJobs: (jobs: JobMatch[]) => void;
@@ -15,6 +16,7 @@ type AppState = {
   addContact: (contact: Contact) => void;
   updateContact: (id: string, patch: Partial<Contact>) => void;
   setActiveContact: (id: string | null) => void;
+  toggleJobSelected: (id: string) => void;
   reset: () => void;
 };
 
@@ -23,7 +25,11 @@ const initialState = {
   jobs: [],
   contacts: [],
   activeContactId: null,
-} satisfies Pick<AppState, "profile" | "jobs" | "contacts" | "activeContactId">;
+  selectedJobIds: [],
+} satisfies Pick<
+  AppState,
+  "profile" | "jobs" | "contacts" | "activeContactId" | "selectedJobIds"
+>;
 
 export const useAppState = create<AppState>()(
   persist(
@@ -40,6 +46,12 @@ export const useAppState = create<AppState>()(
           contacts: state.contacts.map((c) => (c.id === id ? { ...c, ...patch } : c)),
         })),
       setActiveContact: (id) => set({ activeContactId: id }),
+      toggleJobSelected: (id) =>
+        set((state) => ({
+          selectedJobIds: state.selectedJobIds.includes(id)
+            ? state.selectedJobIds.filter((j) => j !== id)
+            : [...state.selectedJobIds, id],
+        })),
       reset: () => set(initialState),
     }),
     {
