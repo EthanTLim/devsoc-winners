@@ -38,7 +38,14 @@ export const useAppState = create<AppState>()(
 
       setProfile: (profile) => set({ profile }),
       setJobs: (jobs) => set({ jobs }),
-      addJob: (job) => set((state) => ({ jobs: [...state.jobs, job] })),
+      addJob: (job) =>
+        set((state) =>
+          // Dedupe by URL so "Find more" (or a re-run) never adds the same
+          // posting twice.
+          state.jobs.some((j) => j.url === job.url)
+            ? state
+            : { jobs: [...state.jobs, job] }
+        ),
       setContacts: (contacts) => set({ contacts }),
       addContact: (contact) => set((state) => ({ contacts: [...state.contacts, contact] })),
       updateContact: (id, patch) =>

@@ -80,3 +80,20 @@ export async function searchPeopleExa(query: string, opts?: { numResults?: numbe
     },
   });
 }
+
+/**
+ * General public web search for a real person at a company (team pages,
+ * staff directories, press releases, conference bios, etc) used as a fallback
+ * when no LinkedIn profile is found. Still public search results only, never a
+ * logged-in scrape. May surface a publicly-listed work email + the source page.
+ */
+export async function searchPeopleWebExa(query: string, opts?: { numResults?: number }): Promise<ExaSearchResponse> {
+  return exaSearch({
+    query,
+    numResults: opts?.numResults ?? 10,
+    type: "auto",
+    contents: {
+      text: true,
+    },
+  });
+}

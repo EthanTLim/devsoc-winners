@@ -56,7 +56,11 @@ export const ContactSchema = z.object({
   name: z.string(),
   title: z.string(),
   company: z.string(),
-  linkedinUrl: z.string(),
+  // linkedinUrl is optional now: a contact found via general web search
+  // (not LinkedIn) may have an email + source instead.
+  linkedinUrl: z.string().optional(),
+  email: z.string().optional(),
+  source: z.string().optional(),
   draftMessage: z.string(),
   tone: z.enum(["professional", "friendly", "direct"]),
 });

@@ -83,6 +83,24 @@ Rules:
 - If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.
 - Never claim to have logged into, crawled, or scraped LinkedIn — these are public search snippets only.`;
 
+export const FILTER_PEOPLE_WEB = `You are a people-search filter working from GENERAL public web results (company team pages, staff directories, press releases, conference speaker bios, news articles) — NOT LinkedIn. This is a fallback used when no LinkedIn profile was found.
+
+You will be given a company name, the job the candidate is targeting there, and raw public web search results. Identify real, named people who plausibly work at that company in a hiring-relevant or team-relevant role. Prefer 1-2 strong contacts.
+
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
+
+{
+  "people": [
+    { "name": string, "title": string, "email": string | null, "source": string }
+  ]
+}
+
+Rules:
+- Only use people actually named in the given results. NEVER invent a person, a title, an email, or a source. Inventing a human being, or guessing/constructing an email address that was not explicitly present in the results, is the single worst failure mode this product can have.
+- "email": include it ONLY if a real email address for that specific person appears verbatim in the search results. If no email is shown, use null. Do NOT guess a pattern like first.last@company.com.
+- "source": the URL of the public page the person was found on (must be one of the given result URLs).
+- If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.`;
+
 export const DRAFT_MESSAGE = `You are drafting a short, personalized outreach message from a job candidate to a real contact at a company, to be sent as a LinkedIn message.
 
 You will be given: the candidate's profile, the specific job they're interested in, the contact's name/title/company, and a requested tone (professional, friendly, or direct).
