@@ -235,6 +235,22 @@ async function dropDeadJobs<T extends { url: string }>(
   return jobs.filter((_, i) => results[i] !== "dead");
 }
 
+// How far back Exa is allowed to look for a posting's publish date. Biases
+// hard toward fresh postings so stale/closed listings are less likely to be
+// returned at all, on top of the ranking-LLM drop rules and the dead-link
+// check further down. Known limitation: a very recently closed posting that
+// has no date signal in its snippet and still renders a live-looking HTML
+// page (closed status shown only via client-side JS) can still slip through
+// all three layers — reliably catching that would need a headless browser
+// to execute the page's JS, which is out of scope here.
+const FRESHNESS_WINDOW_DAYS = 45;
+
+function getStartPublishedDate(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - FRESHNESS_WINDOW_DAYS);
+  return d.toISOString();
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -243,6 +259,7 @@ export async function POST(req: Request) {
     const excluded = new Set(excludeUrls ?? []);
 
     const queries = buildQueries(profile, isMore);
+    const startPublishedDate = getStartPublishedDate();
 
     const searchResults = await withRetry(async () => {
       const responses = await Promise.all(
@@ -250,6 +267,7 @@ export async function POST(req: Request) {
           searchJobsExa(q.query, {
             numResults: 10,
             includeDomains: q.includeDomains,
+            startPublishedDate,
           })
         )
       );
