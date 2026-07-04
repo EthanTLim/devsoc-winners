@@ -31,14 +31,33 @@ export function DraftPanel({ contact }: DraftPanelProps) {
   const [copied, setCopied] = useState(false);
 
   const requestIdRef = useRef(0);
+  // Cache of already-generated drafts, keyed by `${contactId}:${tone}`, so
+  // switching back to a tone shows the saved text instantly instead of asking
+  // the AI to rewrite it every time.
+  const cacheRef = useRef<Map<string, string>>(new Map());
+  const cacheKey = (contactId: string, t: Tone) => `${contactId}:${t}`;
 
   const job = contact ? jobs.find((j) => j.id === contact.jobId) ?? null : null;
 
   const runDraft = useCallback(
-    async (activeContact: Contact, activeTone: Tone) => {
+    async (activeContact: Contact, activeTone: Tone, force = false) => {
       if (!profile) return;
       const activeJob = jobs.find((j) => j.id === activeContact.jobId);
       if (!activeJob) return;
+
+      // Serve from cache when we already have this contact+tone draft, unless
+      // the user explicitly asked to regenerate.
+      const key = cacheKey(activeContact.id, activeTone);
+      if (!force) {
+        const cached = cacheRef.current.get(key);
+        if (cached) {
+          requestIdRef.current++; // cancel any in-flight stream
+          setDraft(cached);
+          setStatus("done");
+          setCopied(false);
+          return;
+        }
+      }
 
       const requestId = ++requestIdRef.current;
       setStatus("loading");
@@ -75,6 +94,7 @@ export function DraftPanel({ contact }: DraftPanelProps) {
 
         if (requestIdRef.current !== requestId) return;
 
+        cacheRef.current.set(key, accumulated);
         setStatus("done");
         updateContact(activeContact.id, { draftMessage: accumulated, tone: activeTone });
       } catch (err) {
@@ -118,6 +138,12 @@ export function DraftPanel({ contact }: DraftPanelProps) {
   const handleRetry = () => {
     if (contact) {
       runDraft(contact, tone);
+    }
+  };
+
+  const handleRegenerate = () => {
+    if (contact) {
+      runDraft(contact, tone, true); // force a fresh draft, bypass cache
     }
   };
 
@@ -185,7 +211,16 @@ export function DraftPanel({ contact }: DraftPanelProps) {
         ))}
       </Tabs>
 
-      <div className="flex items-center justify-end border-t border-border pt-3">
+      <div className="flex items-center justify-end gap-2 border-t border-border pt-3">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleRegenerate}
+          disabled={status === "loading"}
+          aria-label="Regenerate draft message"
+        >
+          Regenerate
+        </Button>
         <Button
           size="sm"
           variant={copied ? "secondary" : "outline"}
