@@ -1,33 +1,195 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { SearchX, TriangleAlert } from "lucide-react";
 import type { JobMatch } from "@/lib/schemas";
+import { useAppState } from "@/lib/store";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { JobCard } from "@/components/job-card";
 
-// Placeholder for the real job results list. A feature agent replaces this
-// with streaming job cards (title, company, location, link, fitRationale).
+// Real job results list: auto-triggers /api/search-jobs on mount when there
+// is a profile and no jobs yet, streams NDJSON job matches into the store as
+// they arrive, and renders progressive skeleton -> card states.
 
-type JobListProps = {
-  jobs: JobMatch[];
-};
+type FetchState = "idle" | "loading" | "error" | "done";
 
-export function JobList({ jobs }: JobListProps) {
-  if (jobs.length === 0) {
+// Organic, non-uniform stagger delays so cards don't reveal on a mechanical
+// beat. Deterministic-ish but varied.
+function staggerDelay(index: number): number {
+  const base = index * 0.09;
+  const jitter = ((index * 37) % 11) / 100; // small pseudo-random wobble
+  return base + jitter;
+}
+
+export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
+  const searchParams = useSearchParams();
+  const isDemo = searchParams.get("demo") === "1";
+
+  const profile = useAppState((s) => s.profile);
+  const jobs = useAppState((s) => s.jobs);
+  const addJob = useAppState((s) => s.addJob);
+
+  const [fetchState, setFetchState] = useState<FetchState>("idle");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const hasStarted = useRef(false);
+
+  const displayJobs = propJobs ?? jobs;
+
+  async function runSearch() {
+    if (!profile) return;
+    setFetchState("loading");
+
+    try {
+      const res = await fetch("/api/search-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile }),
+      });
+
+      if (!res.ok || !res.body) {
+        throw new Error(`Search failed (${res.status})`);
+      }
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const job = JSON.parse(trimmed) as JobMatch;
+            addJob(job);
+          } catch {
+            // Skip malformed lines, keep streaming.
+          }
+        }
+      }
+
+      if (buffer.trim()) {
+        try {
+          const job = JSON.parse(buffer.trim()) as JobMatch;
+          addJob(job);
+        } catch {
+          // Ignore trailing partial line.
+        }
+      }
+
+      setFetchState("done");
+    } catch (err) {
+      console.error("[job-list] search failed:", err);
+      setFetchState("error");
+    }
+  }
+
+  useEffect(() => {
+    if (isDemo || propJobs) return;
+    if (hasStarted.current) return;
+    if (!profile || jobs.length > 0) return;
+
+    hasStarted.current = true;
+    runSearch();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, jobs.length, isDemo, propJobs]);
+
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
+
+  function handleRetry() {
+    hasStarted.current = true;
+    runSearch();
+  }
+
+  if (fetchState === "loading") {
+    return (
+      <div className="flex flex-col gap-3" aria-label="Loading job matches" aria-busy="true">
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5"
+            style={{ opacity: 1 - i * 0.12 }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex flex-1 flex-col gap-2">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+              <Skeleton className="h-9 w-9 shrink-0 rounded-full" />
+            </div>
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (fetchState === "error") {
     return (
       <div
-        className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10"
-        aria-label="Job list placeholder"
+        className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-destructive/40 bg-card/50 p-10 text-center"
+        role="alert"
       >
-        <p className="text-sm text-muted-foreground">Job matches go here</p>
+        <TriangleAlert className="h-6 w-6 text-destructive" aria-hidden="true" />
+        <p className="text-sm font-medium text-foreground">
+          Couldn&apos;t load job matches
+        </p>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          Something went wrong reaching the search service. Give it another try.
+        </p>
+        <Button onClick={handleRetry} variant="outline" size="sm">
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (displayJobs.length === 0) {
+    return (
+      <div
+        className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card/50 p-10 text-center"
+        aria-label="No job matches yet"
+      >
+        <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+        <p className="text-sm font-medium text-foreground">No job matches yet</p>
+        <p className="max-w-sm text-sm text-muted-foreground">
+          {profile
+            ? "We couldn't find strong matches this time. Try refining your target role or location."
+            : "Confirm your profile first, then live job matches will stream in here."}
+        </p>
       </div>
     );
   }
 
   return (
     <ul className="flex flex-col gap-3" aria-label="Job matches">
-      {jobs.map((job) => (
-        <li key={job.id} className="rounded-xl border border-border bg-card p-4">
-          <p className="font-medium">{job.title}</p>
-          <p className="text-sm text-muted-foreground">
-            {job.company} &middot; {job.location}
-          </p>
-        </li>
+      {displayJobs.map((job, index) => (
+        <JobCard
+          key={job.id}
+          job={job}
+          selected={selectedIds.has(job.id)}
+          onToggleSelected={toggleSelected}
+          delay={staggerDelay(index)}
+        />
       ))}
     </ul>
   );
