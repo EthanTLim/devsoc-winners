@@ -266,16 +266,37 @@ export async function POST(req: Request) {
       });
     }
 
+    // Cap how many deduped results reach the ranking LLM call. Exa results
+    // are already in relevance order per-query and dedupeByUrl preserves
+    // that order while interleaving across queries (Promise.all + flatMap
+    // walks query-by-query, so early slots span all source queries/boards
+    // already), so a simple slice keeps the strongest hits across boards
+    // without needing extra interleaving logic.
+    const MAX_RESULTS_FOR_RANKING = 15;
+    const resultsForRanking = searchResults.slice(0, MAX_RESULTS_FOR_RANKING);
+
+    // Trim the profile to only the fields the ranking prompt needs to pick
+    // good-fit jobs and write a fitRationale, instead of the full profile
+    // (every experience bullet, full preferences object, etc). This is the
+    // other big lever on prompt size alongside the snippet/result caps below.
+    const profileForRanking = {
+      name: profile.name,
+      targetRoles: profile.targetRoles,
+      skills: profile.skills,
+      location: profile.location,
+      preferences: profile.preferences,
+    };
+
     const rankingPrompt = `Candidate profile:\n${JSON.stringify(
-      profile,
+      profileForRanking,
       null,
       2
     )}\n\nRaw search results (title, url, source snippet text):\n${JSON.stringify(
-      searchResults.map((r) => ({
+      resultsForRanking.map((r) => ({
         title: r.title,
         url: r.url,
         publishedDate: r.publishedDate,
-        text: r.text?.slice(0, 1500),
+        text: r.text?.slice(0, 450),
       })),
       null,
       2
