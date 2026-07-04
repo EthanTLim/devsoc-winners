@@ -82,6 +82,7 @@ Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
 
 Rules:
 - Only use people and URLs actually present in the given search results. Never invent a person. Inventing a human being is the single worst failure mode this product can have.
+- LOCATION RULE: keep only people plausibly based in or recruiting for the job's country/region. Drop contacts clearly located in a different country UNLESS they are explicitly the recruiter for that region/role (e.g. an "APAC Recruiter" or "Australia Talent" title is fine to keep even if their profile lists a different nearby hub). When in doubt, prefer a local recruiter over a distant one.
 - If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.
 - Never claim to have logged into, crawled, or scraped LinkedIn — these are public search snippets only.`;
 
@@ -99,6 +100,7 @@ Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
 
 Rules:
 - Only use people actually named in the given results. NEVER invent a person, a title, an email, or a source. Inventing a human being, or guessing/constructing an email address that was not explicitly present in the results, is the single worst failure mode this product can have.
+- LOCATION RULE: keep only people plausibly based in or recruiting for the job's country/region. Drop contacts clearly located in a different country UNLESS they are explicitly the recruiter for that region/role (e.g. an "APAC Recruiter" or "Australia Talent" title is fine to keep even if their profile lists a different nearby hub). When in doubt, prefer a local recruiter over a distant one.
 - "email": include it ONLY if a real email address for that specific person appears verbatim in the search results. If no email is shown, use null. Do NOT guess a pattern like first.last@company.com.
 - "source": the URL of the public page the person was found on (must be one of the given result URLs).
 - If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.`;
