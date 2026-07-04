@@ -42,16 +42,19 @@ function buildQueries(
 
   // On a "find more" pass, use a different set of phrasings so Exa surfaces
   // fresh postings rather than the same top hits.
+  // Trimmed to ~5 highest-signal queries: one broad phrasing-varied query
+  // plus one domain-targeted query each for Seek, Indeed, LinkedIn Jobs, and
+  // the ATS boards. This keeps board coverage while cutting the number of
+  // parallel Exa calls (and downstream ranking/validation work) from 7 to 5,
+  // which is the single biggest lever on end-to-end latency.
   const specs: QuerySpec[] = more
     ? [
-        // Broad, phrasing-varied queries.
-        { query: `${altRole} ${location} apply now`.trim() },
+        // Broad, phrasing-varied query to surface fresh postings.
         {
           query: secondSkill
-            ? `${role} jobs ${secondSkill} ${location}`.trim()
-            : `${role} openings ${location}`.trim(),
+            ? `${altRole} jobs ${secondSkill} ${location} apply now`.trim()
+            : `${altRole} openings ${location} apply now`.trim(),
         },
-        { query: `${role} vacancy ${location} hiring`.trim() },
         // Domain-targeted variants against major boards + ATS platforms.
         {
           query: `${altRole} ${location}`.trim(),
@@ -71,13 +74,11 @@ function buildQueries(
         },
       ]
     : [
-        // Broad, phrasing-varied queries.
-        { query: `${role} ${location} job posting`.trim() },
-        { query: `${role} careers remote hiring now`.trim() },
+        // Broad, phrasing-varied query.
         {
           query: topSkill
-            ? `hiring ${role} with ${topSkill} experience`.trim()
-            : `hiring ${role} now`.trim(),
+            ? `hiring ${role} with ${topSkill} experience ${location}`.trim()
+            : `${role} ${location} job posting`.trim(),
         },
         // Domain-targeted variants against major boards + ATS platforms.
         {
@@ -126,10 +127,40 @@ const DEAD_LISTING_PHRASES = [
   "not available anymore",
   "this job has expired",
   "position has been filled",
+  "has been filled",
   "job not found",
   "unfortunately we can't find that job",
   "search similar jobs",
+  "no longer accepting applications",
+  "no longer open",
+  "no longer active",
+  "no longer accepting",
+  "applications are closed",
+  "applications have closed",
+  "this position is closed",
+  "this job is closed",
+  "vacancy is closed",
+  "job has expired",
+  "posting has expired",
+  // LinkedIn-specific: a client-rendered "expired" banner doesn't show up in
+  // a plain (non-JS) fetch of the page, but LinkedIn tags expired postings
+  // with this tracking redirect in the raw HTML, so it's a reliable signal
+  // even without executing JS.
+  "expired_jd_redirect",
 ];
+
+// Bare "expired" is only trusted as a dead-listing signal when it appears
+// near job/posting/listing/application vocabulary, so a live posting that
+// merely mentions an unrelated "expired" (e.g. "expired certifications
+// welcome to apply") isn't dropped.
+const EXPIRED_CONTEXT_PATTERN =
+  /\b(job|posting|listing|application|vacancy|role)\b[^.]{0,40}\bexpired\b|\bexpired\b[^.]{0,40}\b(job|posting|listing|application|vacancy|role)\b/;
+
+// Only scan the first N characters of the body for expiry phrases. Expiry
+// banners are almost always near the top of the page (title/header area),
+// so this avoids reading/scanning multi-hundred-KB bodies just to find a
+// short phrase, which meaningfully speeds up validation.
+const BODY_SCAN_CHARS = 20000;
 
 type LinkStatus = "live" | "dead" | "unknown";
 
@@ -142,7 +173,7 @@ type LinkStatus = "live" | "dead" | "unknown";
  */
 async function validateJobUrl(
   url: string,
-  timeoutMs = 5000
+  timeoutMs = 3500
 ): Promise<LinkStatus> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -163,10 +194,10 @@ async function validateJobUrl(
     }
 
     const body = await res.text().catch(() => "");
-    const lower = body.toLowerCase();
-    const looksExpired = DEAD_LISTING_PHRASES.some((phrase) =>
-      lower.includes(phrase)
-    );
+    const lower = body.slice(0, BODY_SCAN_CHARS).toLowerCase();
+    const looksExpired =
+      DEAD_LISTING_PHRASES.some((phrase) => lower.includes(phrase)) ||
+      EXPIRED_CONTEXT_PATTERN.test(lower);
 
     return looksExpired ? "dead" : "live";
   } catch {
@@ -183,7 +214,7 @@ async function validateJobUrl(
  */
 async function dropDeadJobs<T extends { url: string }>(
   jobs: T[],
-  concurrency = 6
+  concurrency = 10
 ): Promise<T[]> {
   const results: LinkStatus[] = new Array(jobs.length);
   let cursor = 0;
@@ -266,10 +297,17 @@ export async function POST(req: Request) {
         id: crypto.randomUUID(),
       }));
 
+    // Only validate the jobs that will actually be shown to the user (the
+    // ranking pass already orders best-fit first), instead of every ranked
+    // posting. This is the other big latency lever: fewer link fetches means
+    // less time blocked on slow third-party servers.
+    const MAX_JOBS_SHOWN = 8;
+    const jobsToValidate = rankedJobs.slice(0, MAX_JOBS_SHOWN);
+
     // Drop postings whose live URL is confirmed dead/expired before ever
     // showing them to the user. Never fabricate or pad to compensate for
     // whatever this removes.
-    const jobs = await dropDeadJobs(rankedJobs);
+    const jobs = await dropDeadJobs(jobsToValidate);
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
