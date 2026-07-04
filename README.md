@@ -48,8 +48,8 @@ EXA_API_KEY=
 
 **Two LLM provider modes** (chosen at call time by `LLM_PROVIDER`):
 
-- **`claude-agent-sdk`** — local dev/demo. Uses the Claude Agent SDK against a Claude Pro subscription's monthly Agent SDK credit. No API key required, and none should be set. This path does not run on Vercel, which is expected.
-- **`openrouter`** — the deploy path. Plain HTTPS calls to OpenRouter (DeepSeek by default). Set `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`.
+- **`claude-agent-sdk`** (local dev/demo). Uses the Claude Agent SDK against a Claude Pro subscription's monthly Agent SDK credit. No API key required, and none should be set. This path does not run on Vercel, which is expected.
+- **`openrouter`** (the deploy path). Plain HTTPS calls to OpenRouter (DeepSeek by default). Set `OPENROUTER_API_KEY` and `OPENROUTER_MODEL`.
 
 > This project never uses `ANTHROPIC_API_KEY`. Local Claude access is via subscription auth through the Agent SDK; setting an Anthropic API key would override that and break billing.
 
@@ -77,7 +77,7 @@ Next.js 14 (App Router) on Vercel
 │   ├── POST /api/find-people     → Exa linkedin.com search + LLM filtering
 │   └── POST /api/draft-message   → LLM message generation (streams text)
 │
-├── LLM layer (single abstraction — lib/llm.ts)
+├── LLM layer (single abstraction, lib/llm.ts)
 │   ├── Local dev/demo: Claude via Agent SDK (Pro plan credit, no API key)
 │   └── Deployed:       OpenRouter (DeepSeek) via env switch
 │
