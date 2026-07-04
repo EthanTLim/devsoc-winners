@@ -19,10 +19,20 @@ const RankedJobsSchema = z.object({
   jobs: z.array(RankedJobSchema),
 });
 
+// Company careers pages built on these ATS platforms host real, live listings
+// (not just aggregator mirrors), so biasing a query toward them widens
+// coverage beyond the big three job boards.
+const ATS_DOMAINS = ["greenhouse.io", "lever.co", "workable.com"];
+
+type QuerySpec = {
+  query: string;
+  includeDomains?: string[];
+};
+
 function buildQueries(
   profile: z.infer<typeof ProfileSchema>,
   more = false
-): string[] {
+): QuerySpec[] {
   const role = profile.targetRoles[0] ?? "job";
   const altRole = profile.targetRoles[1] ?? role;
   const location =
@@ -32,23 +42,63 @@ function buildQueries(
 
   // On a "find more" pass, use a different set of phrasings so Exa surfaces
   // fresh postings rather than the same top hits.
-  const queries = more
+  const specs: QuerySpec[] = more
     ? [
-        `${altRole} ${location} apply now`.trim(),
-        secondSkill
-          ? `${role} jobs ${secondSkill} ${location}`.trim()
-          : `${role} openings ${location}`.trim(),
-        `${role} vacancy ${location} hiring`.trim(),
+        // Broad, phrasing-varied queries.
+        { query: `${altRole} ${location} apply now`.trim() },
+        {
+          query: secondSkill
+            ? `${role} jobs ${secondSkill} ${location}`.trim()
+            : `${role} openings ${location}`.trim(),
+        },
+        { query: `${role} vacancy ${location} hiring`.trim() },
+        // Domain-targeted variants against major boards + ATS platforms.
+        {
+          query: `${altRole} ${location}`.trim(),
+          includeDomains: ["seek.com.au"],
+        },
+        {
+          query: `${role} ${location}`.trim(),
+          includeDomains: ["indeed.com", "au.indeed.com"],
+        },
+        {
+          query: `${role} ${location}`.trim(),
+          includeDomains: ["linkedin.com/jobs"],
+        },
+        {
+          query: `${role} ${location} careers`.trim(),
+          includeDomains: ATS_DOMAINS,
+        },
       ]
     : [
-        `${role} ${location} job posting`.trim(),
-        `${role} careers remote hiring now`.trim(),
-        topSkill
-          ? `hiring ${role} with ${topSkill} experience`.trim()
-          : `hiring ${role} now`.trim(),
+        // Broad, phrasing-varied queries.
+        { query: `${role} ${location} job posting`.trim() },
+        { query: `${role} careers remote hiring now`.trim() },
+        {
+          query: topSkill
+            ? `hiring ${role} with ${topSkill} experience`.trim()
+            : `hiring ${role} now`.trim(),
+        },
+        // Domain-targeted variants against major boards + ATS platforms.
+        {
+          query: `${role} ${location} job`.trim(),
+          includeDomains: ["seek.com.au"],
+        },
+        {
+          query: `${role} ${location} job`.trim(),
+          includeDomains: ["indeed.com", "au.indeed.com"],
+        },
+        {
+          query: `${role} ${location} job`.trim(),
+          includeDomains: ["linkedin.com/jobs"],
+        },
+        {
+          query: `${role} ${location} careers`.trim(),
+          includeDomains: ATS_DOMAINS,
+        },
       ];
 
-  return queries.filter((q) => q.trim().length > 0);
+  return specs.filter((s) => s.query.length > 0);
 }
 
 function dedupeByUrl(results: ExaSearchResult[]): ExaSearchResult[] {
@@ -71,6 +121,89 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+const DEAD_LISTING_PHRASES = [
+  "no longer available",
+  "not available anymore",
+  "this job has expired",
+  "position has been filled",
+  "job not found",
+  "unfortunately we can't find that job",
+  "search similar jobs",
+];
+
+type LinkStatus = "live" | "dead" | "unknown";
+
+/**
+ * Checks whether a job posting URL is still a live listing. Dead links are
+ * confirmed via a 4xx/5xx status or well-known "this posting is gone" copy
+ * in the response body. Network errors/timeouts are treated as "unknown" so
+ * a slow site never gets punished, but a confirmed-dead posting is always
+ * dropped.
+ */
+async function validateJobUrl(
+  url: string,
+  timeoutMs = 5000
+): Promise<LinkStatus> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const res = await fetch(url, {
+      method: "GET",
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      },
+    });
+
+    if (res.status >= 400) {
+      return "dead";
+    }
+
+    const body = await res.text().catch(() => "");
+    const lower = body.toLowerCase();
+    const looksExpired = DEAD_LISTING_PHRASES.some((phrase) =>
+      lower.includes(phrase)
+    );
+
+    return looksExpired ? "dead" : "live";
+  } catch {
+    return "unknown";
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * Runs validateJobUrl over a list of jobs in parallel (bounded concurrency),
+ * and returns only the jobs that are NOT confirmed dead. "unknown" (network
+ * error/timeout) jobs are kept.
+ */
+async function dropDeadJobs<T extends { url: string }>(
+  jobs: T[],
+  concurrency = 6
+): Promise<T[]> {
+  const results: LinkStatus[] = new Array(jobs.length);
+  let cursor = 0;
+
+  async function worker() {
+    while (cursor < jobs.length) {
+      const index = cursor++;
+      results[index] = await validateJobUrl(jobs[index].url);
+    }
+  }
+
+  const workers = Array.from(
+    { length: Math.min(concurrency, jobs.length) },
+    () => worker()
+  );
+  await Promise.allSettled(workers);
+
+  return jobs.filter((_, i) => results[i] !== "dead");
+}
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -82,7 +215,12 @@ export async function POST(req: Request) {
 
     const searchResults = await withRetry(async () => {
       const responses = await Promise.all(
-        queries.map((q) => searchJobsExa(q, { numResults: 10 }))
+        queries.map((q) =>
+          searchJobsExa(q.query, {
+            numResults: 10,
+            includeDomains: q.includeDomains,
+          })
+        )
       );
       // Drop anything the user has already been shown before ranking.
       return dedupeByUrl(responses.flatMap((r) => r.results)).filter(
@@ -121,12 +259,17 @@ export async function POST(req: Request) {
     );
 
     const validUrls = new Set(searchResults.map((r) => r.url));
-    const jobs = ranked.jobs
+    const rankedJobs = ranked.jobs
       .filter((job) => validUrls.has(job.url))
       .map((job) => ({
         ...job,
         id: crypto.randomUUID(),
       }));
+
+    // Drop postings whose live URL is confirmed dead/expired before ever
+    // showing them to the user. Never fabricate or pad to compensate for
+    // whatever this removes.
+    const jobs = await dropDeadJobs(rankedJobs);
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({

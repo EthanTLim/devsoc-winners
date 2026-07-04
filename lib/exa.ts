@@ -49,8 +49,15 @@ async function exaSearch(body: Record<string, unknown>): Promise<ExaSearchRespon
  * Search for live job postings matching a query built from the user's
  * profile (target role + location + "job posting", etc). Requests text
  * contents and biases toward recent results.
+ *
+ * Pass `includeDomains` to bias a query toward specific job boards (Seek,
+ * Indeed, LinkedIn Jobs) or ATS platforms (Greenhouse, Lever, Workable) used
+ * by company careers pages.
  */
-export async function searchJobsExa(query: string, opts?: { numResults?: number }): Promise<ExaSearchResponse> {
+export async function searchJobsExa(
+  query: string,
+  opts?: { numResults?: number; includeDomains?: string[] }
+): Promise<ExaSearchResponse> {
   return exaSearch({
     query,
     numResults: opts?.numResults ?? 10,
@@ -58,6 +65,7 @@ export async function searchJobsExa(query: string, opts?: { numResults?: number 
     // "job posting" makes Exa return actual listing pages you can apply on,
     // not company homepages (which "company" returned).
     category: "job posting",
+    ...(opts?.includeDomains ? { includeDomains: opts.includeDomains } : {}),
     contents: {
       text: true,
     },
