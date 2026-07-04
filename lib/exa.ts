@@ -116,3 +116,23 @@ export async function searchPeopleWebExa(query: string, opts?: { numResults?: nu
     },
   });
 }
+
+/**
+ * Search for real companies (small/mid-tier firms) in the candidate's field,
+ * used to surface cold-outreach prospects that are not advertising a specific
+ * role. Uses Exa's "company" category so results are company sites/profiles,
+ * not job postings. Public search results only, never a logged-in scrape.
+ */
+export async function searchCompaniesExa(
+  query: string,
+  opts?: { numResults?: number; includeDomains?: string[] }
+): Promise<ExaSearchResponse> {
+  return exaSearch({
+    query,
+    numResults: opts?.numResults ?? 10,
+    type: "auto",
+    category: "company",
+    ...(opts?.includeDomains ? { includeDomains: opts.includeDomains } : {}),
+    contents: { text: true },
+  });
+}

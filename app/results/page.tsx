@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { JobList } from "@/components/job-list";
+import { PotentialJobList } from "@/components/potential-job-list";
 import { ContactPanel } from "@/components/contact-panel";
 import { DraftPanel } from "@/components/draft-panel";
 import { DEMO } from "@/lib/demo-fixtures";
@@ -39,9 +40,22 @@ export default function ResultsPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <section aria-labelledby="jobs-heading" className="lg:col-span-1">
           <h2 id="jobs-heading" className="mb-3 text-sm font-medium text-muted-foreground">
-            Jobs
+            Publicly listed jobs
           </h2>
           <JobList jobs={jobs} />
+
+          <div aria-labelledby="potential-jobs-heading">
+            <h2
+              id="potential-jobs-heading"
+              className="mb-3 mt-8 text-sm font-medium text-muted-foreground"
+            >
+              Potential jobs in your area of expertise
+            </h2>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Unlisted firms we think are worth a direct, cold-email approach.
+            </p>
+            <PotentialJobList jobs={jobs} />
+          </div>
         </section>
 
         <section aria-labelledby="contacts-heading" className="lg:col-span-1">

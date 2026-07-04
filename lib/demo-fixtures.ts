@@ -48,6 +48,18 @@ const jobs: JobMatch[] = [
       "Jordan's dashboard project and React/Node experience line up closely with Acme's internal-tools team stack.",
     fitScore: 82,
   },
+  {
+    id: "brightlabs-frontend-0",
+    title: "Frontend Engineer",
+    company: "Bright Labs",
+    location: "Sydney, NSW",
+    url: "https://example.com/bright-labs",
+    source: "example.com",
+    fitRationale:
+      "Bright Labs is a small Sydney product studio whose React and TypeScript stack lines up with Jordan's internal-dashboard project. A lean team like this often hires strong candidates through a direct approach rather than a formal listing.",
+    kind: "potential",
+    hiringLikelihood: "high",
+  },
 ];
 
 const contacts: Contact[] = [
@@ -60,6 +72,17 @@ const contacts: Contact[] = [
     linkedinUrl: "https://www.linkedin.com/in/example-sam-rivera",
     draftMessage:
       "Hi Sam, I saw you lead the Internal Tools team at Acme Corp and noticed the Software Engineer Intern opening on that team. I recently built an internal dashboard used by over 40 staff, which cut a lot of the manual reporting work. I would love to bring that same focus on real usability to the intern role. Would you be open to a quick chat about the team.",
+    tone: "professional",
+  },
+  {
+    id: "contact-1",
+    jobId: "brightlabs-frontend-0",
+    name: "Priya Chandra",
+    title: "Founding Engineer",
+    company: "Bright Labs",
+    linkedinUrl: "https://www.linkedin.com/in/example-priya-chandra",
+    draftMessage:
+      "Hi Priya, I came across Bright Labs while looking into small Sydney product studios and really like the focus on lean, fast-moving teams. I don't see a listed opening, but I wanted to reach out directly. I recently built an internal dashboard used by over 40 staff and cut API response times by 30% through caching, and I'd bring that same attention to performance and usability to a Frontend Engineer role at Bright Labs. Would you be open to a short chat about where the team is headed.",
     tone: "professional",
   },
 ];

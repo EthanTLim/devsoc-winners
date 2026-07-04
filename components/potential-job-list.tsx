@@ -8,11 +8,12 @@ import type { JobMatch } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { JobCard } from "@/components/job-card";
+import { ProspectFirmCard } from "@/components/prospect-firm-card";
 
-// Real job results list: auto-triggers /api/search-jobs on mount when there
-// is a profile and no jobs yet, streams NDJSON job matches into the store as
-// they arrive, and renders progressive skeleton -> card states.
+// Potential-firm results list: auto-triggers /api/discover-firms on mount when
+// there is a profile and no potential-kind jobs yet, streams NDJSON JobMatch
+// records (kind: "potential") into the shared store as they arrive, and
+// renders progressive skeleton -> card states, mirroring JobList.
 
 type FetchState = "idle" | "loading" | "error" | "done";
 
@@ -24,7 +25,7 @@ function staggerDelay(index: number): number {
   return base + jitter;
 }
 
-export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
+export function PotentialJobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   const searchParams = useSearchParams();
   const isDemo = searchParams.get("demo") === "1";
 
@@ -41,9 +42,9 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   // In demo mode the page passes fixture jobs in as a prop. In live mode the
   // page passes the store's jobs array, which is the same data this component
   // already reads from the store, so we drive live rendering off the store and
-  // only use the prop as the demo override. Potential firms live in the same
-  // array but render in their own list (PotentialJobList), so exclude them here.
-  const displayJobs = (isDemo ? propJobs ?? jobs : jobs).filter((j) => j.kind !== "potential");
+  // only use the prop as the demo override. Either way, only potential-kind
+  // firms belong in this list; listed jobs render in JobList.
+  const displayJobs = (isDemo ? propJobs ?? jobs : jobs).filter((j) => j.kind === "potential");
 
   async function runSearch(mode: "initial" | "more" = "initial") {
     if (!profile) return;
@@ -55,8 +56,8 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
 
     try {
       const excludeUrls =
-        mode === "more" ? jobs.map((j) => j.url) : undefined;
-      const res = await fetch("/api/search-jobs", {
+        mode === "more" ? jobs.filter((j) => j.kind === "potential").map((j) => j.url) : undefined;
+      const res = await fetch("/api/discover-firms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profile, excludeUrls }),
@@ -105,11 +106,11 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
         setFetchState("done");
       }
     } catch (err) {
-      console.error("[job-list] search failed:", err);
+      console.error("[potential-job-list] search failed:", err);
       if (mode === "more") {
-        // Keep the jobs already on screen; just surface a toast.
+        // Keep the firms already on screen; just surface a toast.
         setLoadingMore(false);
-        toast.error("Couldn't load more jobs. Please try again.");
+        toast.error("Couldn't load more firms. Please try again.");
       } else {
         setFetchState("error");
       }
@@ -119,7 +120,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   useEffect(() => {
     if (isDemo) return;
     if (hasStarted.current) return;
-    if (!profile || jobs.some((j) => j.kind !== "potential")) return;
+    if (!profile || jobs.some((j) => j.kind === "potential")) return;
 
     hasStarted.current = true;
     runSearch();
@@ -133,7 +134,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
 
   if (fetchState === "loading") {
     return (
-      <div className="flex flex-col gap-3" aria-label="Loading job matches" aria-busy="true">
+      <div className="flex flex-col gap-3" aria-label="Loading potential firms" aria-busy="true">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
@@ -163,7 +164,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
       >
         <TriangleAlert className="h-6 w-6 text-destructive" aria-hidden="true" />
         <p className="text-sm font-medium text-foreground">
-          Couldn&apos;t load job matches
+          Couldn&apos;t load potential firms
         </p>
         <p className="max-w-sm text-sm text-muted-foreground">
           Something went wrong reaching the search service. Give it another try.
@@ -179,14 +180,14 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
     return (
       <div
         className="flex min-h-[200px] flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card/50 p-10 text-center"
-        aria-label="No job matches yet"
+        aria-label="No potential firms yet"
       >
         <SearchX className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
-        <p className="text-sm font-medium text-foreground">No job matches yet</p>
+        <p className="text-sm font-medium text-foreground">No standout firms yet</p>
         <p className="max-w-sm text-sm text-muted-foreground">
           {profile
-            ? "We couldn't find strong matches this time. Try refining your target role or location."
-            : "Confirm your profile first, then live job matches will stream in here."}
+            ? "We could not surface small firms worth a direct approach this time. Try broadening your target role or location."
+            : "Confirm your profile first, then potential firms will stream in here."}
         </p>
         {profile && !isDemo && (
           <Button onClick={handleRetry} variant="outline" size="sm">
@@ -199,9 +200,9 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <ul className="flex flex-col gap-3" aria-label="Job matches">
+      <ul className="flex flex-col gap-3" aria-label="Potential firms">
         {displayJobs.map((job, index) => (
-          <JobCard
+          <ProspectFirmCard
             key={job.id}
             job={job}
             selected={selectedJobIds.includes(job.id)}
@@ -212,7 +213,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
       </ul>
 
       {loadingMore && (
-        <div className="flex flex-col gap-3" aria-label="Loading more jobs" aria-busy="true">
+        <div className="flex flex-col gap-3" aria-label="Loading more potential firms" aria-busy="true">
           {[0, 1].map((i) => (
             <div
               key={i}
@@ -236,7 +237,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
           className="self-center"
         >
           <Plus className="size-4" aria-hidden="true" />
-          {loadingMore ? "Finding more..." : "Find more jobs"}
+          {loadingMore ? "Finding more..." : "Find more firms"}
         </Button>
       )}
     </div>

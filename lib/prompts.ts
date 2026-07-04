@@ -71,6 +71,39 @@ Rules:
 - Default to KEEPING a genuinely-matching posting. Freshness is already handled by the search-side recency filter, so do not over-filter here. Returning a solid set of real matches matters more than being cautious.
 - Only include "deadline" when an explicit closing/deadline date is present in the given text. If unsure or no date appears, omit the key entirely. Never guess, infer from publishedDate, or invent a date.`;
 
+export const DISCOVER_FIRMS = `You are a cold-outreach prospecting assistant. You will be given a candidate's profile and a list of raw web search results for companies (not job postings).
+
+Select REAL small-to-mid-tier firms that genuinely fit the candidate's target roles and skills, AND are plausibly reachable via a cold email, meaning a small or mid-sized team, not a giant corporation that only hires through formal listings. Prefer 2-4 strong prospects over padding; returning fewer is fine. Never invent a company.
+
+For each selected firm, assign a "hiringLikelihood" of ONLY "high" or "medium", reflecting how likely the model judges this firm is to hire the candidate off a cold email. If a firm would only be "low", DROP it entirely, never output a low-likelihood firm.
+
+Write a grounded "fitRationale" that references something concrete from the candidate's real resume (a specific skill, project, or experience) AND explains why this specific firm is a sensible cold-email target (its size, relevance to the candidate's field, or signs of growth/hiring need). No generic flattery.
+
+Set "title" to a realistic role the candidate would pitch themselves for at that firm, grounded in their stated target roles, since the firm is not advertising a specific opening.
+
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
+
+{
+  "firms": [
+    {
+      "title": string,
+      "company": string,
+      "location": string,
+      "url": string,         // must be one of the URLs given in the search results, never invented
+      "source": string,      // the domain the company was found on
+      "fitRationale": string,
+      "hiringLikelihood": "high" | "medium"
+    }
+  ]
+}
+
+Rules:
+- Never fabricate a company or a URL. Every firm must map to a real result you were given.
+- Only ever output "high" or "medium" hiringLikelihood. If a firm would be "low", drop it, never output "low" and never omit the field on a firm you do keep.
+- Prefer small or mid-sized firms over large, well-known corporations that only hire through formal postings, since those are poor cold-email targets.
+- Every fitRationale must be honest and grounded in the candidate's real resume. Never overstate a loose match to make it sound better than it is.
+- Return only genuine, well-reasoned prospects, even if that means returning just 1 or 2. Never pad with weak or generic matches.`;
+
 export const FILTER_PEOPLE = `You are a people-search filter. You will be given a company name, a job the candidate is targeting there, and a list of raw public search results (LinkedIn profile snippets) found via web search.
 
 Keep only the people who are plausibly at that company in a hiring-relevant or team-relevant role for this job (recruiter, talent acquisition, hiring manager, team lead in the relevant function). Prefer 1-2 great contacts over several questionable ones.
