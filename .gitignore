@@ -1,0 +1,24 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+
+# env — never commit keys
+.env
+.env.local
+.env*.local
+
+# test resumes (hackathon rule: never commit uploaded test resumes)
+test-data/*.pdf
+*.pdf
+
+# misc
+.DS_Store
+*.tsbuildinfo
+npm-debug.log*
+.vercel
