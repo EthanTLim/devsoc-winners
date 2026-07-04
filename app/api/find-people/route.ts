@@ -51,11 +51,11 @@ export async function POST(req: NextRequest) {
     const { job } = RequestSchema.parse(body);
 
     // --- Pass 1: LinkedIn (preferred) --------------------------------------
-    const liQuery = `"${job.company}" recruiter OR "talent acquisition" OR "${job.title} lead"`;
+    const liQuery = `"${job.company}" "${job.location}" recruiter OR "talent acquisition" OR "${job.title} lead"`;
     const liResults = await searchPeopleExa(liQuery, { numResults: 10 });
 
     if (liResults.results.length > 0) {
-      const prompt = `Company: ${job.company}\nJob the candidate is targeting: ${job.title} (${job.location})\n\nRaw public search results:\n\n${resultsToText(liResults.results)}`;
+      const prompt = `Company: ${job.company}\nJob the candidate is targeting: ${job.title} (${job.location})\nJob location (contacts must be based in or recruit for this region): ${job.location}\n\nRaw public search results:\n\n${resultsToText(liResults.results)}`;
       const filtered = await completeJson({
         system: FILTER_PEOPLE,
         prompt,
@@ -81,14 +81,14 @@ export async function POST(req: NextRequest) {
     // No usable LinkedIn contact found, so search the wider public web (team
     // pages, staff directories, press). Return name + optional real email +
     // the source page. Never fabricate anyone or guess an email.
-    const webQuery = `"${job.company}" team OR staff OR "head of engineering" OR recruiter OR hiring contact`;
+    const webQuery = `"${job.company}" "${job.location}" team OR staff OR "head of engineering" OR recruiter OR hiring contact`;
     const webResults = await searchPeopleWebExa(webQuery, { numResults: 10 });
 
     if (webResults.results.length === 0) {
       return NextResponse.json({ contacts: [] satisfies Contact[] });
     }
 
-    const webPrompt = `Company: ${job.company}\nJob the candidate is targeting: ${job.title} (${job.location})\n\nRaw public web search results:\n\n${resultsToText(webResults.results)}`;
+    const webPrompt = `Company: ${job.company}\nJob the candidate is targeting: ${job.title} (${job.location})\nJob location (contacts must be based in or recruit for this region): ${job.location}\n\nRaw public web search results:\n\n${resultsToText(webResults.results)}`;
     const webFiltered = await completeJson({
       system: FILTER_PEOPLE_WEB,
       prompt: webPrompt,
