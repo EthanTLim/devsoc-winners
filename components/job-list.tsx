@@ -36,7 +36,11 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   const [fetchState, setFetchState] = useState<FetchState>("idle");
   const hasStarted = useRef(false);
 
-  const displayJobs = propJobs ?? jobs;
+  // In demo mode the page passes fixture jobs in as a prop. In live mode the
+  // page passes the store's jobs array, which is the same data this component
+  // already reads from the store, so we drive live rendering off the store and
+  // only use the prop as the demo override.
+  const displayJobs = isDemo ? propJobs ?? jobs : jobs;
 
   async function runSearch() {
     if (!profile) return;
@@ -94,14 +98,14 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   }
 
   useEffect(() => {
-    if (isDemo || propJobs) return;
+    if (isDemo) return;
     if (hasStarted.current) return;
     if (!profile || jobs.length > 0) return;
 
     hasStarted.current = true;
     runSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, jobs.length, isDemo, propJobs]);
+  }, [profile, jobs.length, isDemo]);
 
   function handleRetry() {
     hasStarted.current = true;
@@ -165,6 +169,11 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
             ? "We couldn't find strong matches this time. Try refining your target role or location."
             : "Confirm your profile first, then live job matches will stream in here."}
         </p>
+        {profile && !isDemo && (
+          <Button onClick={handleRetry} variant="outline" size="sm">
+            Search again
+          </Button>
+        )}
       </div>
     );
   }
