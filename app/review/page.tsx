@@ -1,6 +1,7 @@
-// Profile review/edit page shell. A feature agent fills in the real
-// profile-form component (components/profile-form.tsx) wired to the parsed
-// profile in lib/store.ts. Kept intentionally bare.
+// Profile review/edit page shell. Profile form slot filled by
+// components/profile-form.tsx wired to the parsed profile in lib/store.ts.
+
+import { ProfileForm } from "@/components/profile-form";
 
 export default function ReviewPage() {
   return (
@@ -15,13 +16,9 @@ export default function ReviewPage() {
         </p>
       </div>
 
-      {/* Profile form slot — a feature agent replaces this with
-          components/profile-form.tsx bound to useAppState().profile. */}
-      <div
-        className="flex min-h-[300px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10"
-        aria-label="Profile form placeholder"
-      >
-        <p className="text-sm text-muted-foreground">Profile form goes here</p>
+      {/* #profile-form-slot */}
+      <div id="profile-form-slot">
+        <ProfileForm />
       </div>
     </main>
   );
