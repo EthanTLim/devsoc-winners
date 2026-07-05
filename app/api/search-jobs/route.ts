@@ -113,6 +113,32 @@ function dedupeByUrl(results: ExaSearchResult[]): ExaSearchResult[] {
   return deduped;
 }
 
+// URL/title patterns that are NOT individual job postings. Domain-scoped Exa
+// queries (indeed.com, seek.com.au, lever.co, ...) surface a lot of these:
+// personal LinkedIn profiles, company review/salary pages, aggregator search
+// pages, and ATS marketing/blog pages. Filtering them out before ranking keeps
+// the candidate pool made of real listings, which is what stopped internship
+// searches returning 0 (the LLM was being fed almost entirely non-jobs).
+const NON_POSTING_URL_PATTERNS = [
+  "linkedin.com/in/", // personal profiles
+  "/reviews", "/review/", "/salaries", "/salary/", "/cmp/", // Indeed/SEEK company pages
+  "/company/", "/companies/", "/recruiters/", "/agencies/", // company/agency pages
+  "/resources/", "/blog/", "/resource/", "/report", // marketing/blog content
+  "/jobs/part-time", "/jobs/full-time", // aggregator category pages
+];
+
+// Aggregator/search-results pages tend to have titles like "99 jobs in Sydney"
+// or "React Developer Jobs in Surry Hills". A real posting title is a single
+// role, not a count of many.
+const AGGREGATOR_TITLE_PATTERN = /\b\d{1,4}\s+[\w\s]*jobs\b|jobs in [\w\s,]+\|/i;
+
+function looksLikeJobPosting(result: ExaSearchResult): boolean {
+  const url = result.url.toLowerCase();
+  if (NON_POSTING_URL_PATTERNS.some((p) => url.includes(p))) return false;
+  if (result.title && AGGREGATOR_TITLE_PATTERN.test(result.title)) return false;
+  return true;
+}
+
 async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn();
@@ -301,10 +327,12 @@ export async function POST(req: Request) {
         throw new Error("All Exa job search queries failed");
       }
 
-      // Drop anything the user has already been shown before ranking.
-      return dedupeByUrl(fulfilled.flatMap((r) => r.value.results)).filter(
-        (r) => !excluded.has(r.url)
-      );
+      // Drop anything the user has already been shown, then drop results that
+      // clearly are not individual job postings (profiles, review/salary pages,
+      // blogs, aggregator search pages) so the ranking LLM only sees real jobs.
+      return dedupeByUrl(fulfilled.flatMap((r) => r.value.results))
+        .filter((r) => !excluded.has(r.url))
+        .filter(looksLikeJobPosting);
     });
 
     if (searchResults.length === 0) {
@@ -350,13 +378,43 @@ export async function POST(req: Request) {
       2
     )}`;
 
-    const ranked = await withRetry(() =>
-      completeJson({
-        system: RANK_JOBS,
-        prompt: rankingPrompt,
-        schema: RankedJobsSchema,
-      })
-    );
+    // If ranking fails (LLM returns unparseable output), degrade gracefully:
+    // fall back to the top plausible results with a neutral rationale instead
+    // of 500-ing the whole request. Returning some real jobs beats an error.
+    let ranked: { jobs: z.infer<typeof RankedJobSchema>[] };
+    try {
+      ranked = await withRetry(() =>
+        completeJson({
+          system: RANK_JOBS,
+          prompt: rankingPrompt,
+          schema: RankedJobsSchema,
+        })
+      );
+    } catch (rankErr) {
+      console.error("[/api/search-jobs] ranking failed, falling back to raw results:", rankErr);
+      ranked = {
+        jobs: resultsForRanking.slice(0, 8).map((r) => ({
+          title: r.title ?? "Job posting",
+          company: (() => {
+            try {
+              return new URL(r.url).hostname.replace(/^www\./, "");
+            } catch {
+              return "See posting";
+            }
+          })(),
+          location: profile.location,
+          url: r.url,
+          source: (() => {
+            try {
+              return new URL(r.url).hostname.replace(/^www\./, "");
+            } catch {
+              return "web";
+            }
+          })(),
+          fitRationale: "A recent posting that matches your search. Open it to see the full details.",
+        })),
+      };
+    }
 
     const validUrls = new Set(searchResults.map((r) => r.url));
     const rankedJobs = ranked.jobs
