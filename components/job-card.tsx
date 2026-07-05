@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Bookmark, BookmarkCheck } from "lucide-react";
 import type { JobMatch } from "@/lib/schemas";
 import { Badge } from "@/components/ui/badge";
+import { ExpandableText } from "@/components/expandable-text";
 import { useAppState } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
@@ -73,10 +74,16 @@ export function JobCard({ job, selected, onToggleSelected, delay = 0 }: JobCardP
               {monogram}
             </div>
             <div className="flex min-w-0 flex-col gap-0.5">
-              <h3 className="truncate text-[15px] font-semibold leading-snug text-card-foreground">
+              <h3
+                title={job.title}
+                className="truncate text-[15px] font-semibold leading-snug text-card-foreground"
+              >
                 {job.title}
               </h3>
-              <p className="truncate text-sm text-muted-foreground">
+              <p
+                title={`${job.company} · ${job.location}`}
+                className="truncate text-sm text-muted-foreground"
+              >
                 {job.company} &middot; {job.location}
               </p>
             </div>
@@ -109,9 +116,7 @@ export function JobCard({ job, selected, onToggleSelected, delay = 0 }: JobCardP
           </div>
         </div>
 
-        <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-          {job.fitRationale}
-        </p>
+        <ExpandableText text={job.fitRationale} className="text-sm leading-relaxed text-muted-foreground" />
 
         <div className="flex items-center justify-between gap-3 pt-1">
           <div className="flex flex-wrap items-center gap-1.5">
