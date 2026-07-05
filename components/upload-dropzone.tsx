@@ -2,10 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { FileText, UploadCloud } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ResumeLoadingScreen } from "@/components/resume-loading-screen";
 import { cn } from "@/lib/utils";
 import { useAppState } from "@/lib/store";
 import type { Profile } from "@/lib/schemas";
@@ -99,22 +100,25 @@ export function UploadDropzone() {
 
   if (isUploading) {
     return (
-      <div
-        className="flex w-full flex-col items-center gap-4 rounded-2xl border border-border bg-card/50 p-12 shadow-sm"
-        role="status"
-        aria-live="polite"
-      >
-        <div className="flex w-full items-center gap-3">
-          <FileText className="size-5 shrink-0 text-primary" aria-hidden="true" />
-          <span className="truncate text-sm text-foreground">{fileName}</span>
+      <>
+        <div
+          className="flex w-full flex-col items-center gap-4 rounded-2xl border border-border bg-card/50 p-12 shadow-sm"
+          aria-hidden="true"
+        >
+          <div className="flex w-full items-center gap-3">
+            <FileText className="size-5 shrink-0 text-primary" aria-hidden="true" />
+            <span className="truncate text-sm text-foreground">{fileName}</span>
+          </div>
+          <div className="flex w-full flex-col gap-2">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
         </div>
-        <div className="flex w-full flex-col gap-2">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-5/6" />
-        </div>
-        <p className="text-sm text-muted-foreground">Reading your resume...</p>
-      </div>
+        <AnimatePresence>
+          <ResumeLoadingScreen fileName={fileName} />
+        </AnimatePresence>
+      </>
     );
   }
 
