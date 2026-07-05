@@ -63,8 +63,8 @@ export function Sidebar() {
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col self-start border-r border-border bg-sidebar px-4 py-6">
       <div className="px-2">
-        <span className="text-xl font-bold tracking-tight text-foreground">
-          inroad.
+        <span className="font-serif text-2xl tracking-tight text-foreground">
+          inroad<span className="text-primary">.</span>
         </span>
       </div>
 

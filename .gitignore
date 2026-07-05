@@ -22,3 +22,6 @@ test-data/*.pdf
 *.tsbuildinfo
 npm-debug.log*
 .vercel
+
+# Local Claude Code config (machine-specific, may contain keys)
+.claude/

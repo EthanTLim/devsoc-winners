@@ -7,6 +7,11 @@
   .text-balance {
     text-wrap: balance;
   }
+  /* Disable the fi/ff ligatures Fraunces applies by default in headlines. */
+  .no-ligatures {
+    font-variant-ligatures: none;
+    font-feature-settings: "liga" 0, "clig" 0;
+  }
 }
 
 @layer base {
