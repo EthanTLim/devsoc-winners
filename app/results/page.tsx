@@ -78,7 +78,7 @@ export default function ResultsPage() {
         <div className="mx-auto flex max-w-6xl flex-col gap-10">
           <header className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
             <div className="flex flex-col gap-2">
-              <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+              <h1 className="font-serif no-ligatures text-3xl tracking-tight text-foreground sm:text-4xl">
                 Your matches
               </h1>
               <p className="text-muted-foreground">
