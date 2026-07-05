@@ -16,12 +16,14 @@ const STEP_INTERVAL_MS = 2200;
 
 type ResumeLoadingScreenProps = {
   fileName: string | null;
+  /** True once /api/parse-resume has actually returned; snaps the bar to 100%. */
+  complete?: boolean;
 };
 
 // Full-screen takeover shown while /api/parse-resume is in flight (often
 // 15-30s for a real LLM extraction pass). Cycles reassuring status copy so
 // the wait doesn't read as a hang.
-export function ResumeLoadingScreen({ fileName }: ResumeLoadingScreenProps) {
+export function ResumeLoadingScreen({ fileName, complete = false }: ResumeLoadingScreenProps) {
   const reduce = useReducedMotion();
   const [stepIndex, setStepIndex] = useState(0);
 
@@ -68,7 +70,7 @@ export function ResumeLoadingScreen({ fileName }: ResumeLoadingScreenProps) {
         </AnimatePresence>
       </div>
 
-      <ProgressBar className="w-56" />
+      <ProgressBar complete={complete} className="w-56" />
     </motion.div>
   );
 }

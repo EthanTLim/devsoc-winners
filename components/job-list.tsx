@@ -55,6 +55,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
 
   const [fetchState, setFetchState] = useState<FetchState>("idle");
   const [loadingMore, setLoadingMore] = useState(false);
+  const [searchComplete, setSearchComplete] = useState(false);
   const hasStarted = useRef(false);
 
   // In demo mode the page passes fixture jobs in as a prop. In live mode the
@@ -69,6 +70,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
     if (mode === "more") {
       setLoadingMore(true);
     } else {
+      setSearchComplete(false);
       setFetchState("loading");
     }
 
@@ -121,6 +123,8 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
       if (mode === "more") {
         setLoadingMore(false);
       } else {
+        setSearchComplete(true);
+        await new Promise((resolve) => setTimeout(resolve, 350));
         setFetchState("done");
         if (profile) setLastSearchProfileSig(profileSearchSig(profile));
       }
@@ -181,7 +185,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   if (fetchState === "loading") {
     return (
       <div className="flex flex-col gap-4" aria-label="Loading job matches" aria-busy="true">
-        <ProgressBar />
+        <ProgressBar complete={searchComplete} />
         {[0, 1, 2].map((i) => (
           <div
             key={i}

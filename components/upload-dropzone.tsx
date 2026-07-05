@@ -20,6 +20,7 @@ export function UploadDropzone() {
 
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
 
   const uploadFile = useCallback(
@@ -53,11 +54,14 @@ export function UploadDropzone() {
         }
 
         setProfile(data.profile as Profile);
+        setIsComplete(true);
+        await new Promise((resolve) => setTimeout(resolve, 400));
         router.push("/review");
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to parse your resume. Please try again.";
         toast.error(message);
         setIsUploading(false);
+        setIsComplete(false);
         setFileName(null);
       }
     },
@@ -116,7 +120,7 @@ export function UploadDropzone() {
           </div>
         </div>
         <AnimatePresence>
-          <ResumeLoadingScreen fileName={fileName} />
+          <ResumeLoadingScreen fileName={fileName} complete={isComplete} />
         </AnimatePresence>
       </>
     );
