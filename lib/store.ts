@@ -12,6 +12,10 @@ type AppState = {
   // their `hasStarted` re-run guard and search again. Lists include this in
   // their search-trigger useEffect deps.
   searchNonce: number;
+  // Signature of the search-relevant profile fields as of the last completed
+  // job search. Compared against the current profile's signature so job-list
+  // knows when a profile edit should trigger a fresh search.
+  lastSearchProfileSig: string | null;
 
   setProfile: (profile: Profile | null) => void;
   setJobs: (jobs: JobMatch[]) => void;
@@ -23,6 +27,7 @@ type AppState = {
   setActiveContact: (id: string | null) => void;
   toggleJobSelected: (id: string) => void;
   bumpSearch: () => void;
+  setLastSearchProfileSig: (sig: string | null) => void;
   reset: () => void;
 };
 
@@ -33,9 +38,16 @@ const initialState = {
   activeContactId: null,
   selectedJobIds: [],
   searchNonce: 0,
+  lastSearchProfileSig: null,
 } satisfies Pick<
   AppState,
-  "profile" | "jobs" | "contacts" | "activeContactId" | "selectedJobIds" | "searchNonce"
+  | "profile"
+  | "jobs"
+  | "contacts"
+  | "activeContactId"
+  | "selectedJobIds"
+  | "searchNonce"
+  | "lastSearchProfileSig"
 >;
 
 export const useAppState = create<AppState>()(
@@ -73,6 +85,7 @@ export const useAppState = create<AppState>()(
             : [...state.selectedJobIds, id],
         })),
       bumpSearch: () => set((state) => ({ searchNonce: state.searchNonce + 1 })),
+      setLastSearchProfileSig: (sig) => set({ lastSearchProfileSig: sig }),
       reset: () => set(initialState),
     }),
     {

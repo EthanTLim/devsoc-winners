@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, SearchX, TriangleAlert } from "lucide-react";
-import type { JobMatch } from "@/lib/schemas";
+import type { JobMatch, Profile } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -24,17 +24,33 @@ function staggerDelay(index: number): number {
   return base + jitter;
 }
 
+// Signature of only the profile fields that affect job search results. Used
+// to detect "profile changed since the last search" without reacting to
+// unrelated edits (e.g. contact info) that shouldn't force a re-search.
+function profileSearchSig(profile: Profile): string {
+  return JSON.stringify({
+    targetRoles: profile.targetRoles,
+    skills: profile.skills,
+    location: profile.location,
+    preferences: profile.preferences,
+  });
+}
+
 export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const isDemo = searchParams.get("demo") === "1";
 
   const profile = useAppState((s) => s.profile);
   const jobs = useAppState((s) => s.jobs);
+  const setJobs = useAppState((s) => s.setJobs);
   const addJob = useAppState((s) => s.addJob);
   const clearJobsOfKind = useAppState((s) => s.clearJobsOfKind);
   const searchNonce = useAppState((s) => s.searchNonce);
   const selectedJobIds = useAppState((s) => s.selectedJobIds);
   const toggleJobSelected = useAppState((s) => s.toggleJobSelected);
+  const lastSearchProfileSig = useAppState((s) => s.lastSearchProfileSig);
+  const setLastSearchProfileSig = useAppState((s) => s.setLastSearchProfileSig);
 
   const [fetchState, setFetchState] = useState<FetchState>("idle");
   const [loadingMore, setLoadingMore] = useState(false);
@@ -105,6 +121,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
         setLoadingMore(false);
       } else {
         setFetchState("done");
+        if (profile) setLastSearchProfileSig(profileSearchSig(profile));
       }
     } catch (err) {
       console.error("[job-list] search failed:", err);
@@ -131,12 +148,29 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   useEffect(() => {
     if (isDemo) return;
     if (hasStarted.current) return;
-    if (!profile || jobs.some((j) => j.kind !== "potential")) return;
+    if (!profile) return;
+
+    const currentSig = profileSearchSig(profile);
+    const profileChanged =
+      lastSearchProfileSig !== null && currentSig !== lastSearchProfileSig;
+    const hasListedJobs = jobs.some((j) => j.kind !== "potential");
+
+    if (profileChanged) {
+      // Profile edited since the last search: keep only starred jobs, drop
+      // the stale set, and reset the gate so a fresh search runs below.
+      const keptStarred = jobs.filter((j) => selectedJobIds.includes(j.id));
+      setJobs(keptStarred);
+      hasStarted.current = true;
+      runSearch();
+      return;
+    }
+
+    if (hasListedJobs) return; // cache is fresh for this profile, don't re-search
 
     hasStarted.current = true;
     runSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, jobs.length, isDemo, searchNonce]);
+  }, [profile, jobs.length, isDemo, searchNonce, lastSearchProfileSig]);
 
   function handleRetry() {
     hasStarted.current = true;
@@ -200,13 +234,18 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
         <p className="text-sm font-medium text-foreground">No job matches yet</p>
         <p className="max-w-sm text-sm text-muted-foreground">
           {profile
-            ? "We couldn't find strong matches this time. Try refining your target role or location."
+            ? "No matches this time. Try a broader role (for example \"Software Engineer\" instead of a very specific title) or widen your location."
             : "Confirm your profile first, then live job matches will stream in here."}
         </p>
         {profile && !isDemo && (
-          <Button onClick={handleRetry} variant="outline" size="sm">
-            Search again
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <Button onClick={() => router.push("/review")} variant="default" size="sm">
+              Edit role &amp; preferences
+            </Button>
+            <Button onClick={handleRetry} variant="outline" size="sm">
+              Search again
+            </Button>
+          </div>
         )}
       </div>
     );
