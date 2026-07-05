@@ -28,6 +28,21 @@ function employmentTag(title: string): string {
   return "Full-time";
 }
 
+// Freshness tag from a posting's publish date, e.g. "Posted today" /
+// "Posted 3d ago". Returns null for missing or unparseable dates so a bad
+// value never renders. Distinct from the "Closes" deadline tag: this signals
+// how fresh the listing is, not when applications close.
+function postedAgo(postedDate: string | undefined): string | null {
+  if (!postedDate) return null;
+  const then = new Date(postedDate).getTime();
+  if (Number.isNaN(then)) return null;
+  const days = Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24));
+  if (days < 0) return null;
+  if (days === 0) return "Posted today";
+  if (days === 1) return "Posted 1d ago";
+  return `Posted ${days}d ago`;
+}
+
 function workModeTag(remote: string | undefined): string | null {
   switch (remote) {
     case "remote":
@@ -48,7 +63,8 @@ export function JobCard({ job, selected, onToggleSelected, delay = 0 }: JobCardP
   const tags = [
     employmentTag(job.title),
     workModeTag(remotePref),
-    job.deadline ? `Apply by ${job.deadline}` : null,
+    postedAgo(job.postedDate),
+    job.deadline ? `Closes ${job.deadline}` : null,
   ].filter((t): t is string => Boolean(t));
 
   return (
