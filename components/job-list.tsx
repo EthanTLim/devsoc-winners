@@ -7,6 +7,7 @@ import { Plus, SearchX, TriangleAlert } from "lucide-react";
 import type { JobMatch, Profile } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { Button } from "@/components/ui/button";
 import { JobCard } from "@/components/job-card";
 
@@ -179,7 +180,8 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
 
   if (fetchState === "loading") {
     return (
-      <div className="flex flex-col gap-3" aria-label="Loading job matches" aria-busy="true">
+      <div className="flex flex-col gap-4" aria-label="Loading job matches" aria-busy="true">
+        <ProgressBar />
         {[0, 1, 2].map((i) => (
           <div
             key={i}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { FileText } from "lucide-react";
+import { ProgressBar } from "@/components/ui/progress-bar";
 
 const STEPS = [
   "Reading your resume...",
@@ -67,13 +68,7 @@ export function ResumeLoadingScreen({ fileName }: ResumeLoadingScreenProps) {
         </AnimatePresence>
       </div>
 
-      <div className="h-1 w-56 overflow-hidden rounded-full bg-secondary">
-        <motion.div
-          className="h-full w-1/3 rounded-full bg-primary"
-          animate={reduce ? undefined : { x: ["-100%", "220%"] }}
-          transition={{ repeat: Infinity, duration: 1.4, ease: "easeInOut" }}
-        />
-      </div>
+      <ProgressBar className="w-56" />
     </motion.div>
   );
 }
