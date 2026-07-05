@@ -141,6 +141,25 @@ Rules:
 - "source": the URL of the public page the person was found on (must be one of the given result URLs).
 - If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.`;
 
+export const EXTRACT_COMPANY_CONTACT = `You are extracting a company's GENERAL contact details from raw public web search snippets. You will be given a company name and raw public web search results (its own contact/about page, directory listings, press, etc).
+
+Extract the company's general contact details: a general company inbox email, an office phone number, and an office street/city address.
+
+Return ONLY raw JSON, no markdown fences, no preamble, matching this exact shape:
+
+{
+  "email": string | null,
+  "phone": string | null,
+  "address": string | null
+}
+
+Rules:
+- Use ONLY values that appear verbatim in the given results. NEVER guess or construct an email address or phone number that was not explicitly present. Inventing contact details is the single worst failure mode this product can have.
+- "email": a general company inbox (e.g. info@, hello@, careers@, contact@) is fine to use ONLY if it literally appears in the results. A named individual's personal email does not belong here, that is handled by the people-finder pipeline.
+- "phone": include only if a real phone number for the company appears verbatim in the results.
+- "address": the office street/city address, only if it is shown in the results. Do not infer an address from a city name mentioned in passing.
+- If any of these is not present in the results, return null for it. Returning null is a correct, honest answer, never fill a gap with a plausible-looking guess.`;
+
 export const DRAFT_MESSAGE = `You are drafting a short, personalized outreach message from a job candidate to a real contact at a company, to be sent as a LinkedIn message.
 
 You will be given: the candidate's profile, the specific job they're interested in, the contact's name/title/company, and a requested tone (professional, friendly, or direct).

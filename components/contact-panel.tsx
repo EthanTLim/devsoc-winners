@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Contact, JobMatch } from "@/lib/schemas";
+import type { CompanyContact, Contact, JobMatch } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { ContactCard } from "@/components/contact-card";
+import { CompanyContactCard } from "@/components/company-contact-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DEMO } from "@/lib/demo-fixtures";
 
 // Fetches real public contacts (LinkedIn results only) for each selected job
 // that doesn't have contacts yet, via /api/find-people, and renders them as
@@ -33,6 +35,8 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
   const selectedJobs = allJobs.filter((job) => selectedJobIds.includes(job.id));
 
   const [statusByJobId, setStatusByJobId] = useState<Record<string, JobStatus>>({});
+  const [companyContactByJobId, setCompanyContactByJobId] = useState<Record<string, CompanyContact>>({});
+  const [companyContactStatusByJobId, setCompanyContactStatusByJobId] = useState<Record<string, JobStatus>>({});
 
   useEffect(() => {
     if (isDemo) return; // demo mode renders fixture contacts, no live fetch
@@ -66,6 +70,37 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJobs, contacts, isDemo]);
 
+  useEffect(() => {
+    if (isDemo) return; // demo mode renders fixture company contacts, no live fetch
+    const jobsNeedingCompanyContact = selectedJobs.filter((job) => {
+      const status = companyContactStatusByJobId[job.id];
+      return !companyContactByJobId[job.id] && (!status || status === "idle");
+    });
+
+    if (jobsNeedingCompanyContact.length === 0) return;
+
+    setCompanyContactStatusByJobId((prev) => {
+      const next = { ...prev };
+      for (const job of jobsNeedingCompanyContact) {
+        next[job.id] = "loading";
+      }
+      return next;
+    });
+
+    jobsNeedingCompanyContact.forEach((job) => {
+      fetchCompanyContact(job)
+        .then((companyContact) => {
+          setCompanyContactByJobId((prev) => ({ ...prev, [job.id]: companyContact }));
+          setCompanyContactStatusByJobId((prev) => ({ ...prev, [job.id]: "done" }));
+        })
+        .catch((err) => {
+          console.error("company-contact fetch failed:", err);
+          setCompanyContactStatusByJobId((prev) => ({ ...prev, [job.id]: "error" }));
+        });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedJobs, isDemo]);
+
   // Demo mode: render the captured fixture contacts directly, ungated by
   // selection, so the pitch replay shows the full flow with no clicks.
   if (isDemo) {
@@ -83,7 +118,11 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
     }
     return (
       <div className="flex flex-col gap-3">
-        <ContactGroups contacts={contacts} onDraft={setActiveContact} />
+        <ContactGroups
+          contacts={contacts}
+          companyContacts={DEMO.companyContacts}
+          onDraft={setActiveContact}
+        />
       </div>
     );
   }
@@ -108,9 +147,22 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
       {selectedJobs.map((job) => {
         const jobContacts = contacts.filter((c) => c.jobId === job.id);
         const status = statusByJobId[job.id] ?? "idle";
+        const companyContact = companyContactByJobId[job.id];
+        const companyContactStatus = companyContactStatusByJobId[job.id] ?? "idle";
 
         return (
           <div key={job.id} className="flex flex-col gap-3">
+            {companyContact ? (
+              <CompanyContactCard contact={companyContact} />
+            ) : companyContactStatus === "loading" || companyContactStatus === "idle" ? (
+              <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
+                <Skeleton className="h-4 w-1/3" />
+                <Skeleton className="h-3 w-2/5" />
+                <Skeleton className="h-3 w-3/5" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            ) : null}
+
             <h3 className="flex items-baseline gap-1.5 text-sm font-medium text-foreground">
               People at {job.company}
               {jobContacts.length > 0 && (
@@ -155,9 +207,11 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
 // at {company}" heading style used in the live grouped view above.
 function ContactGroups({
   contacts,
+  companyContacts,
   onDraft,
 }: {
   contacts: Contact[];
+  companyContacts: CompanyContact[];
   onDraft: (id: string) => void;
 }) {
   const companies = Array.from(new Set(contacts.map((c) => c.company)));
@@ -165,17 +219,20 @@ function ContactGroups({
   return (
     <>
       {companies.map((company) => {
-        const companyContacts = contacts.filter((c) => c.company === company);
+        const peopleAtCompany = contacts.filter((c) => c.company === company);
+        const companyContact = companyContacts.find((cc) => cc.company === company);
         return (
           <div key={company} className="flex flex-col gap-3">
+            {companyContact ? <CompanyContactCard contact={companyContact} /> : null}
+
             <h3 className="flex items-baseline gap-1.5 text-sm font-medium text-foreground">
               People at {company}
               <span className="text-xs font-normal text-muted-foreground">
-                ({companyContacts.length})
+                ({peopleAtCompany.length})
               </span>
             </h3>
             <ul className="flex flex-col gap-3" aria-label={`Contacts at ${company}`}>
-              {companyContacts.map((contact) => (
+              {peopleAtCompany.map((contact) => (
                 <li key={contact.id}>
                   <ContactCard contact={contact} onDraft={onDraft} />
                 </li>
@@ -201,4 +258,18 @@ async function fetchContactsForJob(job: JobMatch): Promise<Contact[]> {
 
   const data = await res.json();
   return (data.contacts ?? []) as Contact[];
+}
+
+async function fetchCompanyContact(job: JobMatch): Promise<CompanyContact> {
+  const res = await fetch("/api/company-contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ job }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`company-contact request failed (${res.status})`);
+  }
+
+  return (await res.json()) as CompanyContact;
 }

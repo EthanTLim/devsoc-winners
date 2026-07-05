@@ -87,3 +87,21 @@ export const ContactSchema = z.object({
   tone: z.enum(["professional", "friendly", "direct"]),
 });
 export type Contact = z.infer<typeof ContactSchema>;
+
+// Company-level GENERAL contact details (email/phone/address) for a saved
+// job's company, shown above the individual people for that company. Never
+// fabricated: fields are only populated when found verbatim in real search
+// results, and verification flags reflect a real check (DNS MX / format),
+// never a guess.
+export const CompanyContactSchema = z.object({
+  jobId: z.string(),
+  company: z.string(),
+  email: z.string().nullable(),
+  emailVerified: z.boolean(), // true = email domain has DNS MX records (can receive mail)
+  phone: z.string().nullable(),
+  phoneVerified: z.boolean(), // true = passes format/length validation
+  address: z.string().nullable(),
+  note: z.string().nullable(), // honest human text shown for fields not confidently found
+  sourceUrl: z.string().nullable(),
+});
+export type CompanyContact = z.infer<typeof CompanyContactSchema>;

@@ -1,4 +1,4 @@
-import type { Profile, JobMatch, Contact } from "./schemas";
+import type { Profile, JobMatch, Contact, CompanyContact } from "./schemas";
 
 // Cached "real run" fixture used by ?demo=1 mode, the live-pitch insurance
 // policy. This is a minimal but fully-typed stub for now; issue #8 replaces
@@ -87,8 +87,34 @@ const contacts: Contact[] = [
   },
 ];
 
+const companyContacts: CompanyContact[] = [
+  {
+    jobId: "acme-swe-intern-0",
+    company: "Acme Corp",
+    email: "careers@acmecorp.example",
+    emailVerified: true,
+    phone: "+61 2 8005 1234",
+    phoneVerified: true,
+    address: "Level 5, 100 George Street, Sydney NSW 2000",
+    note: null,
+    sourceUrl: "https://example.com/acme/contact",
+  },
+  {
+    jobId: "brightlabs-frontend-0",
+    company: "Bright Labs",
+    email: null,
+    emailVerified: false,
+    phone: "+61 2 9000 4567",
+    phoneVerified: true,
+    address: null,
+    note: "Couldn't confidently find a company email or office address for Bright Labs. Reach out to Priya directly.",
+    sourceUrl: null,
+  },
+];
+
 export const DEMO = {
   profile,
   jobs,
   contacts,
+  companyContacts,
 };

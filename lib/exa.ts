@@ -118,6 +118,28 @@ export async function searchPeopleWebExa(query: string, opts?: { numResults?: nu
 }
 
 /**
+ * General public web search for a company's GENERAL contact details (main
+ * inbox, office phone, office address) — e.g. its own "contact us"/"about"
+ * page, or press/directory listings. Public search results only, never a
+ * logged-in scrape. Pass `includeDomains` to bias toward the company's own
+ * domain.
+ */
+export async function searchCompanyContactExa(
+  query: string,
+  opts?: { numResults?: number; includeDomains?: string[] }
+): Promise<ExaSearchResponse> {
+  return exaSearch({
+    query,
+    numResults: opts?.numResults ?? 10,
+    type: "auto",
+    ...(opts?.includeDomains ? { includeDomains: opts.includeDomains } : {}),
+    contents: {
+      text: true,
+    },
+  });
+}
+
+/**
  * Search for real companies (small/mid-tier firms) in the candidate's field,
  * used to surface cold-outreach prospects that are not advertising a specific
  * role. Uses Exa's "company" category so results are company sites/profiles,
