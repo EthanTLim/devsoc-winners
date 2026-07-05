@@ -2,7 +2,7 @@ import { z } from "zod";
 import { searchCompaniesExa, type ExaSearchResult } from "@/lib/exa";
 import { completeJson } from "@/lib/llm";
 import { DISCOVER_FIRMS } from "@/lib/prompts";
-import { ProfileSchema } from "@/lib/schemas";
+import { ProfileSchema, JobMatchSchema } from "@/lib/schemas";
 
 export const runtime = "nodejs";
 
@@ -87,11 +87,30 @@ export async function POST(req: Request) {
     const queries = buildQueries(profile, isMore);
 
     const searchResults = await withRetry(async () => {
-      const responses = await Promise.all(
+      const settled = await Promise.allSettled(
         queries.map((q) => searchCompaniesExa(q, { numResults: 10 }))
       );
+
+      const fulfilled = settled.filter(
+        (r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof searchCompaniesExa>>> =>
+          r.status === "fulfilled"
+      );
+
+      settled.forEach((r, i) => {
+        if (r.status === "rejected") {
+          console.error(
+            `[/api/discover-firms] query failed: "${queries[i]}"`,
+            r.reason
+          );
+        }
+      });
+
+      if (fulfilled.length === 0) {
+        throw new Error("All Exa company search queries failed");
+      }
+
       // Drop anything the user has already been shown before ranking.
-      return dedupeByUrl(responses.flatMap((r) => r.results)).filter(
+      return dedupeByUrl(fulfilled.flatMap((r) => r.value.results)).filter(
         (r) => !excluded.has(r.url)
       );
     });
@@ -159,7 +178,17 @@ export async function POST(req: Request) {
     const stream = new ReadableStream<Uint8Array>({
       start(controller) {
         for (const firm of firms) {
-          controller.enqueue(encoder.encode(JSON.stringify(firm) + "\n"));
+          // Never let a malformed firm object reach the client as NDJSON;
+          // skip it and keep streaming the rest instead of failing the
+          // whole request.
+          let validated;
+          try {
+            validated = JobMatchSchema.parse(firm);
+          } catch (err) {
+            console.error("[/api/discover-firms] invalid firm skipped:", err);
+            continue;
+          }
+          controller.enqueue(encoder.encode(JSON.stringify(validated) + "\n"));
         }
         controller.close();
       },

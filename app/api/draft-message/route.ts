@@ -16,6 +16,42 @@ const RequestSchema = z.object({
   tone: z.enum(["professional", "friendly", "direct"]),
 });
 
+// Hard product rule: generated outreach messages must never contain an em
+// dash or en dash, even though the prompt already asks the model to avoid
+// them. This transform is the actual enforcement: it decodes the raw byte
+// stream back into text (buffering partial multi-byte UTF-8 sequences across
+// chunk boundaries via TextDecoder's `stream: true` mode), swaps dashes for
+// ", ", cleans up any doubled punctuation that creates, then re-encodes.
+function stripDashesStream(source: ReadableStream<Uint8Array>) {
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+
+  function clean(text: string): string {
+    return text
+      .replace(/[—–]/g, ", ")
+      .replace(/ {2,}/g, " ")
+      .replace(/\s*,\s*,\s*/g, ", ")
+      .replace(/\s+,/g, ",");
+  }
+
+  return source.pipeThrough(
+    new TransformStream<Uint8Array, Uint8Array>({
+      transform(chunk, controller) {
+        const text = decoder.decode(chunk, { stream: true });
+        if (text) {
+          controller.enqueue(encoder.encode(clean(text)));
+        }
+      },
+      flush(controller) {
+        const tail = decoder.decode();
+        if (tail) {
+          controller.enqueue(encoder.encode(clean(tail)));
+        }
+      },
+    })
+  );
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -55,7 +91,7 @@ Possible resume hooks to draw exactly one from: ${resumeHooks.join(", ")}`;
 
     const stream = streamComplete({ system: DRAFT_MESSAGE, prompt });
 
-    return new NextResponse(stream, {
+    return new NextResponse(stripDashesStream(stream), {
       status: 200,
       headers: { "Content-Type": "text/plain; charset=utf-8" },
     });

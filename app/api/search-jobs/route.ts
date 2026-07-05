@@ -122,25 +122,27 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+// High-precision closed/expired phrases only. Generic ones ("no longer
+// available", "has been filled", "no longer open") and live-page UI elements
+// ("search similar jobs" appears as a sidebar on LIVE Seek/Indeed listings)
+// were removed because they were dropping genuinely-open postings. The ranking
+// LLM already drops postings whose Exa snippet shows an explicit closed signal,
+// so this body scan only needs to catch unambiguous "this exact posting is
+// gone" copy that a 404/410 status didn't already cover.
 const DEAD_LISTING_PHRASES = [
-  "no longer available",
-  "not available anymore",
   "this job has expired",
+  "this job posting has expired",
   "position has been filled",
-  "has been filled",
-  "job not found",
-  "unfortunately we can't find that job",
-  "search similar jobs",
+  "this position has been filled",
   "no longer accepting applications",
-  "no longer open",
-  "no longer active",
-  "no longer accepting",
+  "we are no longer accepting applications",
   "applications are closed",
   "applications have closed",
   "this position is closed",
   "this job is closed",
-  "vacancy is closed",
-  "job has expired",
+  "this vacancy is closed",
+  "this job has been closed",
+  "job posting has expired",
   "posting has expired",
   // LinkedIn-specific: a client-rendered "expired" banner doesn't show up in
   // a plain (non-JS) fetch of the page, but LinkedIn tags expired postings
@@ -189,7 +191,12 @@ async function validateJobUrl(
       },
     });
 
-    if (res.status >= 400) {
+    // Only a 404 / 410 (Gone) reliably means the posting was removed. Job
+    // boards (Seek, Indeed, LinkedIn, etc.) routinely answer non-browser
+    // requests with 403/429/999 anti-bot statuses, and 5xx is transient, so
+    // treating those as "dead" wrongly drops live postings. Fall through to
+    // the body-phrase scan for anything else, and default to keeping it.
+    if (res.status === 404 || res.status === 410) {
       return "dead";
     }
 
@@ -266,7 +273,7 @@ export async function POST(req: Request) {
     const startPublishedDate = getStartPublishedDate();
 
     const searchResults = await withRetry(async () => {
-      const responses = await Promise.all(
+      const settled = await Promise.allSettled(
         queries.map((q) =>
           searchJobsExa(q.query, {
             numResults: 10,
@@ -275,8 +282,27 @@ export async function POST(req: Request) {
           })
         )
       );
+
+      const fulfilled = settled.filter(
+        (r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof searchJobsExa>>> =>
+          r.status === "fulfilled"
+      );
+
+      settled.forEach((r, i) => {
+        if (r.status === "rejected") {
+          console.error(
+            `[/api/search-jobs] query failed: "${queries[i].query}"`,
+            r.reason
+          );
+        }
+      });
+
+      if (fulfilled.length === 0) {
+        throw new Error("All Exa job search queries failed");
+      }
+
       // Drop anything the user has already been shown before ranking.
-      return dedupeByUrl(responses.flatMap((r) => r.results)).filter(
+      return dedupeByUrl(fulfilled.flatMap((r) => r.value.results)).filter(
         (r) => !excluded.has(r.url)
       );
     });
