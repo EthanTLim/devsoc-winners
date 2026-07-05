@@ -51,6 +51,11 @@ export const JobMatchSchema = z.object({
   // genuinely appears in the posting text. Optional so existing data
   // (and jobs with no stated deadline) still validate.
   deadline: z.string().optional(),
+  // Freshness signal: when the posting was published (e.g. Adzuna's "created"
+  // date, or Exa's publishedDate). Distinct from `deadline` (a real closing
+  // date) — this is shown as "Posted Xd ago" and is never treated as a
+  // deadline. Optional so existing data still validates.
+  postedDate: z.string().optional(),
   // "listed" = a real public job posting (the default when omitted).
   // "potential" = a small/mid firm surfaced as a cold-outreach prospect,
   // not an advertised role.
