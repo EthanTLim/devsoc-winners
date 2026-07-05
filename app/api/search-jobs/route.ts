@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { searchJobsExa, type ExaSearchResult } from "@/lib/exa";
+import { searchJobsAdzuna, type AdzunaMappedResult } from "@/lib/adzuna";
 import { completeJson } from "@/lib/llm";
 import { RANK_JOBS } from "@/lib/prompts";
 import { ProfileSchema, JobMatchSchema } from "@/lib/schemas";
@@ -298,42 +299,83 @@ export async function POST(req: Request) {
     const queries = buildQueries(profile, isMore);
     const startPublishedDate = getStartPublishedDate();
 
-    const searchResults = await withRetry(async () => {
-      const settled = await Promise.allSettled(
-        queries.map((q) =>
-          searchJobsExa(q.query, {
-            numResults: 10,
-            includeDomains: q.includeDomains,
-            startPublishedDate,
-          })
-        )
-      );
+    // Adzuna is a keyword job-board API (real structured postings), run as a
+    // second source alongside Exa. It uses a plain what/where query rather than
+    // Exa's domain-scoped semantic queries. searchJobsAdzuna never throws (it
+    // returns [] when keys are unset or the request fails), so the app falls
+    // back to Exa alone with no error.
+    const adzunaWhat = [profile.targetRoles[0], profile.skills[0]]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const adzunaWhere = (
+      profile.preferences.locations[0] ??
+      profile.location ??
+      ""
+    ).trim();
 
-      const fulfilled = settled.filter(
-        (r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof searchJobsExa>>> =>
-          r.status === "fulfilled"
-      );
+    // Run Exa (all its queries) and Adzuna in parallel. Each side is wrapped so
+    // one failing never sinks the other.
+    const [exaResults, adzunaResults] = await Promise.all([
+      withRetry(async () => {
+        const settled = await Promise.allSettled(
+          queries.map((q) =>
+            searchJobsExa(q.query, {
+              numResults: 10,
+              includeDomains: q.includeDomains,
+              startPublishedDate,
+            })
+          )
+        );
 
-      settled.forEach((r, i) => {
-        if (r.status === "rejected") {
-          console.error(
-            `[/api/search-jobs] query failed: "${queries[i].query}"`,
-            r.reason
-          );
+        const fulfilled = settled.filter(
+          (r): r is PromiseFulfilledResult<Awaited<ReturnType<typeof searchJobsExa>>> =>
+            r.status === "fulfilled"
+        );
+
+        settled.forEach((r, i) => {
+          if (r.status === "rejected") {
+            console.error(
+              `[/api/search-jobs] query failed: "${queries[i].query}"`,
+              r.reason
+            );
+          }
+        });
+
+        if (fulfilled.length === 0) {
+          // Don't throw here anymore: Adzuna may still have results. Return []
+          // and let the "both empty" guard below decide.
+          console.error("[/api/search-jobs] all Exa job search queries failed");
+          return [] as ExaSearchResult[];
         }
-      });
 
-      if (fulfilled.length === 0) {
-        throw new Error("All Exa job search queries failed");
-      }
+        return fulfilled.flatMap((r) => r.value.results);
+      }),
+      searchJobsAdzuna(adzunaWhat, {
+        where: adzunaWhere || undefined,
+        resultsPerPage: 20,
+      }).then((r) => r.results),
+    ]);
 
-      // Drop anything the user has already been shown, then drop results that
-      // clearly are not individual job postings (profiles, review/salary pages,
-      // blogs, aggregator search pages) so the ranking LLM only sees real jobs.
-      return dedupeByUrl(fulfilled.flatMap((r) => r.value.results))
-        .filter((r) => !excluded.has(r.url))
-        .filter(looksLikeJobPosting);
-    });
+    // Side-map of Adzuna's clean structured fields, keyed by URL, so we can
+    // re-attach them after the ranking LLM (which only sees title/url/text and
+    // would otherwise re-guess company/location). Also lets us tag which shown
+    // jobs are Adzuna-origin so they skip the dead-link check.
+    const adzunaByUrl = new Map<string, AdzunaMappedResult>();
+    for (const r of adzunaResults) {
+      if (r.url && !adzunaByUrl.has(r.url)) adzunaByUrl.set(r.url, r);
+    }
+
+    // Merge Adzuna FIRST so it wins first-seen ties in dedupe. Adzuna results
+    // are real structured postings; only apply the aggregator/non-posting URL
+    // filter to Exa-origin results (Adzuna redirect_urls can legitimately
+    // contain "/company/" etc. and are already known-good postings).
+    const searchResults = dedupeByUrl([
+      ...(adzunaResults as ExaSearchResult[]),
+      ...exaResults,
+    ])
+      .filter((r) => !excluded.has(r.url))
+      .filter((r) => adzunaByUrl.has(r.url) || looksLikeJobPosting(r));
 
     if (searchResults.length === 0) {
       return new Response("", {
@@ -419,22 +461,45 @@ export async function POST(req: Request) {
     const validUrls = new Set(searchResults.map((r) => r.url));
     const rankedJobs = ranked.jobs
       .filter((job) => validUrls.has(job.url))
-      .map((job) => ({
-        ...job,
-        id: crypto.randomUUID(),
-      }));
+      .map((job) => {
+        // Re-attach Adzuna's clean structured data for Adzuna-origin jobs: the
+        // ranking LLM re-derives company/location from snippet text, but Adzuna
+        // gives them cleanly, so prefer the real values. `created` becomes
+        // postedDate (a freshness signal) — never a deadline. Exa-origin jobs
+        // get postedDate from their publishedDate when present.
+        const adz = adzunaByUrl.get(job.url);
+        return {
+          ...job,
+          id: crypto.randomUUID(),
+          ...(adz
+            ? {
+                company: adz.company ?? job.company,
+                location: adz.location ?? job.location,
+                postedDate: adz.publishedDate ?? job.postedDate,
+              }
+            : {}),
+        };
+      });
 
-    // Only validate the jobs that will actually be shown to the user (the
-    // ranking pass already orders best-fit first), instead of every ranked
-    // posting. This is the other big latency lever: fewer link fetches means
-    // less time blocked on slow third-party servers.
+    // Only process the jobs that will actually be shown to the user (the
+    // ranking pass already orders best-fit first). Split by origin: Exa jobs
+    // go through the dead-link check (their URLs can be stale/closed), while
+    // Adzuna jobs skip it — Adzuna only serves current postings within its
+    // freshness window, and validating its redirect URLs mostly adds latency
+    // and risks false-dead from anti-bot responses. Recombine by filtering the
+    // ranked slice so the best-fit ordering (and NDJSON stream order) holds.
     const MAX_JOBS_SHOWN = 8;
-    const jobsToValidate = rankedJobs.slice(0, MAX_JOBS_SHOWN);
+    const jobsToShow = rankedJobs.slice(0, MAX_JOBS_SHOWN);
 
-    // Drop postings whose live URL is confirmed dead/expired before ever
-    // showing them to the user. Never fabricate or pad to compensate for
-    // whatever this removes.
-    const jobs = await dropDeadJobs(jobsToValidate);
+    const exaOriginJobs = jobsToShow.filter((j) => !adzunaByUrl.has(j.url));
+    const liveExaUrls = new Set(
+      (await dropDeadJobs(exaOriginJobs)).map((j) => j.url)
+    );
+    // Never fabricate or pad to compensate for whatever the dead-link check
+    // removes. Adzuna jobs are always kept; Exa jobs only if not confirmed dead.
+    const jobs = jobsToShow.filter(
+      (j) => adzunaByUrl.has(j.url) || liveExaUrls.has(j.url)
+    );
 
     const encoder = new TextEncoder();
     const stream = new ReadableStream<Uint8Array>({
