@@ -1,16 +1,49 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { toast } from "sonner";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
 import { JobList } from "@/components/job-list";
 import { PotentialJobList } from "@/components/potential-job-list";
 import { ContactPanel } from "@/components/contact-panel";
 import { DraftPanel } from "@/components/draft-panel";
 import { Sidebar } from "@/components/sidebar";
-import { Button } from "@/components/ui/button";
+import { RefineBar } from "@/components/refine-bar";
+import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { DEMO } from "@/lib/demo-fixtures";
 import { useAppState } from "@/lib/store";
+import type { JobMatch } from "@/lib/schemas";
+import { cn } from "@/lib/utils";
+
+type SortMode = "best-match" | "newest";
+
+const SORT_LABELS: Record<SortMode, string> = {
+  "best-match": "Best match",
+  newest: "Newest",
+};
+
+function sortJobs(jobs: JobMatch[], mode: SortMode): JobMatch[] {
+  if (mode === "best-match") {
+    return [...jobs].sort((a, b) => (b.fitScore ?? -1) - (a.fitScore ?? -1));
+  }
+  // "Newest": sort by deadline date when present (as a proxy signal for
+  // recency of the posting), falling back to original insertion order for
+  // jobs with no stated date.
+  return [...jobs].sort((a, b) => {
+    const aTime = a.deadline ? Date.parse(a.deadline) : NaN;
+    const bTime = b.deadline ? Date.parse(b.deadline) : NaN;
+    if (Number.isNaN(aTime) && Number.isNaN(bTime)) return 0;
+    if (Number.isNaN(aTime)) return 1;
+    if (Number.isNaN(bTime)) return -1;
+    return bTime - aTime;
+  });
+}
 
 // Results page shell: jobs, contacts, drafts, refine chat. This file's
 // import structure is frozen — feature agents fill in real search/refine
@@ -25,12 +58,17 @@ export default function ResultsPage() {
   const storeContacts = useAppState((state) => state.contacts);
   const activeContactId = useAppState((state) => state.activeContactId);
 
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [sortMode, setSortMode] = useState<SortMode>("best-match");
+
   const jobs = isDemo ? DEMO.jobs : storeJobs;
   const contacts = isDemo ? DEMO.contacts : storeContacts;
   const activeContact =
     contacts.find((c) => c.id === activeContactId) ?? contacts[0] ?? null;
 
   const listedJobsCount = jobs.filter((j) => j.kind !== "potential").length;
+
+  const sortedJobs = useMemo(() => sortJobs(jobs, sortMode), [jobs, sortMode]);
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -51,12 +89,17 @@ export default function ResultsPage() {
             <Button
               variant="outline"
               className="rounded-full"
-              onClick={() => toast("Refine is coming soon")}
+              aria-expanded={refineOpen}
+              onClick={() => setRefineOpen((open) => !open)}
             >
               <SlidersHorizontal className="size-4" aria-hidden="true" />
               Refine search
             </Button>
           </header>
+
+          {refineOpen && !isDemo && (
+            <RefineBar onApplied={() => setRefineOpen(false)} />
+          )}
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1fr_1.1fr]">
             <section aria-labelledby="jobs-heading" className="flex min-w-0 flex-col gap-3">
@@ -69,17 +112,30 @@ export default function ResultsPage() {
                     {listedJobsCount}
                   </span>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="rounded-full"
-                  onClick={() => toast("Sorting is coming soon")}
-                >
-                  Best match
-                  <ChevronDown className="size-3.5" aria-hidden="true" />
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className={cn(
+                      buttonVariants({ variant: "outline", size: "sm" }),
+                      "rounded-full"
+                    )}
+                  >
+                    {SORT_LABELS[sortMode]}
+                    <ChevronDown className="size-3.5" aria-hidden="true" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {(Object.keys(SORT_LABELS) as SortMode[]).map((mode) => (
+                      <DropdownMenuItem
+                        key={mode}
+                        checked={sortMode === mode}
+                        onClick={() => setSortMode(mode)}
+                      >
+                        {SORT_LABELS[mode]}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <JobList jobs={jobs} />
+              <JobList jobs={sortedJobs} />
 
               <div className="mt-6 border-t border-border pt-5">
                 <h3 className="text-sm font-semibold text-foreground">

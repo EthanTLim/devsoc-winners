@@ -61,6 +61,17 @@ export const JobMatchSchema = z.object({
 });
 export type JobMatch = z.infer<typeof JobMatchSchema>;
 
+// Structured delta produced by the /api/refine pipeline (see
+// PRD.md/CLAUDE.md pipeline #5). All fields optional: the model omits
+// whatever the user's free-text instruction didn't imply.
+export const RefineDeltaSchema = z.object({
+  locations: z.array(z.string()).optional(),
+  remote: z.enum(["remote", "hybrid", "onsite", "any"]).optional(),
+  roleShift: z.string().optional(),
+  messageEdit: z.string().optional(),
+});
+export type RefineDelta = z.infer<typeof RefineDeltaSchema>;
+
 export const ContactSchema = z.object({
   id: z.string(),
   jobId: z.string(),

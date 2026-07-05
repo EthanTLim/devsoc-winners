@@ -31,6 +31,8 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
   const profile = useAppState((s) => s.profile);
   const jobs = useAppState((s) => s.jobs);
   const addJob = useAppState((s) => s.addJob);
+  const clearJobsOfKind = useAppState((s) => s.clearJobsOfKind);
+  const searchNonce = useAppState((s) => s.searchNonce);
   const selectedJobIds = useAppState((s) => s.selectedJobIds);
   const toggleJobSelected = useAppState((s) => s.toggleJobSelected);
 
@@ -116,6 +118,16 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
     }
   }
 
+  const prevNonce = useRef(searchNonce);
+  useEffect(() => {
+    if (searchNonce !== prevNonce.current) {
+      prevNonce.current = searchNonce;
+      hasStarted.current = false;
+      setFetchState("idle");
+      clearJobsOfKind("listed");
+    }
+  }, [searchNonce, clearJobsOfKind]);
+
   useEffect(() => {
     if (isDemo) return;
     if (hasStarted.current) return;
@@ -124,7 +136,7 @@ export function JobList({ jobs: propJobs }: { jobs?: JobMatch[] }) {
     hasStarted.current = true;
     runSearch();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, jobs.length, isDemo]);
+  }, [profile, jobs.length, isDemo, searchNonce]);
 
   function handleRetry() {
     hasStarted.current = true;

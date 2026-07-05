@@ -8,15 +8,21 @@ type AppState = {
   contacts: Contact[];
   activeContactId: string | null;
   selectedJobIds: string[];
+  // Bumped whenever a refine (or other) action wants job/firm lists to clear
+  // their `hasStarted` re-run guard and search again. Lists include this in
+  // their search-trigger useEffect deps.
+  searchNonce: number;
 
   setProfile: (profile: Profile | null) => void;
   setJobs: (jobs: JobMatch[]) => void;
   addJob: (job: JobMatch) => void;
+  clearJobsOfKind: (kind: "listed" | "potential") => void;
   setContacts: (contacts: Contact[]) => void;
   addContact: (contact: Contact) => void;
   updateContact: (id: string, patch: Partial<Contact>) => void;
   setActiveContact: (id: string | null) => void;
   toggleJobSelected: (id: string) => void;
+  bumpSearch: () => void;
   reset: () => void;
 };
 
@@ -26,9 +32,10 @@ const initialState = {
   contacts: [],
   activeContactId: null,
   selectedJobIds: [],
+  searchNonce: 0,
 } satisfies Pick<
   AppState,
-  "profile" | "jobs" | "contacts" | "activeContactId" | "selectedJobIds"
+  "profile" | "jobs" | "contacts" | "activeContactId" | "selectedJobIds" | "searchNonce"
 >;
 
 export const useAppState = create<AppState>()(
@@ -46,6 +53,12 @@ export const useAppState = create<AppState>()(
             ? state
             : { jobs: [...state.jobs, job] }
         ),
+      clearJobsOfKind: (kind) =>
+        set((state) => ({
+          jobs: state.jobs.filter((j) =>
+            kind === "potential" ? j.kind !== "potential" : j.kind === "potential"
+          ),
+        })),
       setContacts: (contacts) => set({ contacts }),
       addContact: (contact) => set((state) => ({ contacts: [...state.contacts, contact] })),
       updateContact: (id, patch) =>
@@ -59,6 +72,7 @@ export const useAppState = create<AppState>()(
             ? state.selectedJobIds.filter((j) => j !== id)
             : [...state.selectedJobIds, id],
         })),
+      bumpSearch: () => set((state) => ({ searchNonce: state.searchNonce + 1 })),
       reset: () => set(initialState),
     }),
     {
