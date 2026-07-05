@@ -304,15 +304,22 @@ export async function POST(req: Request) {
     // Exa's domain-scoped semantic queries. searchJobsAdzuna never throws (it
     // returns [] when keys are unset or the request fails), so the app falls
     // back to Exa alone with no error.
-    const adzunaWhat = [profile.targetRoles[0], profile.skills[0]]
-      .filter(Boolean)
-      .join(" ")
-      .trim();
+    //
+    // Adzuna does strict keyword AND-matching (unlike Exa's semantic search),
+    // so the query is JUST the role title — appending skills (e.g. "TypeScript")
+    // over-constrains it and returns zero. The location goes in `where`, not
+    // `what`, so it doesn't further narrow the keyword match.
+    const adzunaWhat = (profile.targetRoles[0] ?? "").trim();
     const adzunaWhere = (
       profile.preferences.locations[0] ??
       profile.location ??
       ""
-    ).trim();
+    )
+      // Strip a trailing ", Australia" etc. — Adzuna's `where` wants a plain
+      // place name (e.g. "Sydney"), and the country is already fixed by the
+      // /au/ path segment.
+      .split(",")[0]
+      .trim();
 
     // Run Exa (all its queries) and Adzuna in parallel. Each side is wrapped so
     // one failing never sinks the other.
