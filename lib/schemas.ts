@@ -87,3 +87,17 @@ export const ContactSchema = z.object({
   tone: z.enum(["professional", "friendly", "direct"]),
 });
 export type Contact = z.infer<typeof ContactSchema>;
+
+// Additive schema for the "official points of contact" feature (see
+// app/api/company-contact/route.ts). Not part of the original frozen set
+// above, so it's kept separate: a company's public careers page / listed
+// hiring email, surfaced alongside (never instead of) real people found via
+// /api/find-people. Every field must come from a real Exa search result —
+// never fabricated or guessed.
+export const OfficialContactSchema = z.object({
+  company: z.string(),
+  careersUrl: z.string().optional(), // a REAL careers/jobs/contact page URL from search
+  email: z.string().optional(), // ONLY a real email string extracted from real page text
+  source: z.string().optional(), // the URL the info was found on
+});
+export type OfficialContact = z.infer<typeof OfficialContactSchema>;

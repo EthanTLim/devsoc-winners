@@ -2,21 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import type { Contact, JobMatch } from "@/lib/schemas";
+import { Building2, ExternalLink, Mail } from "lucide-react";
+import type { Contact, JobMatch, OfficialContact } from "@/lib/schemas";
 import { useAppState } from "@/lib/store";
 import { ContactCard } from "@/components/contact-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DEMO_OFFICIAL_CONTACTS } from "@/lib/demo-fixtures";
 
 // Fetches real public contacts (LinkedIn results only) for each selected job
 // that doesn't have contacts yet, via /api/find-people, and renders them as
 // contact cards. Never invents a person: an empty result for a company means
 // a graceful "apply directly" state, not a fabricated contact.
+//
+// In addition, fetches the company's official channels (public careers page +
+// any publicly-listed hiring email) via /api/company-contact, so the user
+// also has a legitimate "apply the normal way" path alongside the real
+// people found above. Never invents a page or an email either.
 
 type ContactPanelProps = {
   contacts: Contact[];
 };
 
 type JobStatus = "idle" | "loading" | "done" | "error";
+type OfficialStatus = "idle" | "loading" | "done" | "error";
 
 export function ContactPanel({ contacts }: ContactPanelProps) {
   const searchParams = useSearchParams();
@@ -33,6 +41,13 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
   const selectedJobs = allJobs.filter((job) => selectedJobIds.includes(job.id));
 
   const [statusByJobId, setStatusByJobId] = useState<Record<string, JobStatus>>({});
+
+  const [officialStatusByJobId, setOfficialStatusByJobId] = useState<
+    Record<string, OfficialStatus>
+  >({});
+  const [officialContactByJobId, setOfficialContactByJobId] = useState<
+    Record<string, OfficialContact | null>
+  >({});
 
   useEffect(() => {
     if (isDemo) return; // demo mode renders fixture contacts, no live fetch
@@ -65,6 +80,41 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedJobs, contacts, isDemo]);
+
+  // Same "only fetch once per job" guard pattern as above, but for the
+  // company's official channels (careers page + listed hiring email). Fires
+  // independently of the people search, so official info still shows up even
+  // when no real person is found for a company.
+  useEffect(() => {
+    if (isDemo) return; // demo mode renders fixture official channels, no live fetch
+    const jobsNeedingOfficial = selectedJobs.filter((job) => {
+      const status = officialStatusByJobId[job.id];
+      return !status || status === "idle";
+    });
+
+    if (jobsNeedingOfficial.length === 0) return;
+
+    setOfficialStatusByJobId((prev) => {
+      const next = { ...prev };
+      for (const job of jobsNeedingOfficial) {
+        next[job.id] = "loading";
+      }
+      return next;
+    });
+
+    jobsNeedingOfficial.forEach((job) => {
+      fetchOfficialContactForJob(job)
+        .then((officialContact) => {
+          setOfficialContactByJobId((prev) => ({ ...prev, [job.id]: officialContact }));
+          setOfficialStatusByJobId((prev) => ({ ...prev, [job.id]: "done" }));
+        })
+        .catch((err) => {
+          console.error("company-contact fetch failed:", err);
+          setOfficialStatusByJobId((prev) => ({ ...prev, [job.id]: "error" }));
+        });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedJobs, isDemo]);
 
   // Demo mode: render the captured fixture contacts directly, ungated by
   // selection, so the pitch replay shows the full flow with no clicks.
@@ -144,6 +194,12 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
                 </p>
               </div>
             )}
+
+            <OfficialChannels
+              job={job}
+              status={officialStatusByJobId[job.id] ?? "idle"}
+              officialContact={officialContactByJobId[job.id] ?? null}
+            />
           </div>
         );
       })}
@@ -151,8 +207,87 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
   );
 }
 
+// Renders the company's official channels (public careers/jobs page + any
+// publicly-listed hiring email), additive to the real people found above.
+// Falls back to "Apply via company site" (the job's own real URL) when
+// nothing official was found, never invents a page or an email.
+function OfficialChannels({
+  job,
+  status,
+  officialContact,
+}: {
+  job: JobMatch;
+  status: OfficialStatus;
+  officialContact: OfficialContact | null;
+}) {
+  if (status === "loading" || status === "idle") {
+    return (
+      <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
+        <Skeleton className="h-3.5 w-1/3" />
+        <Skeleton className="h-3 w-2/5" />
+      </div>
+    );
+  }
+
+  const hasCareersUrl = Boolean(officialContact?.careersUrl);
+  const hasEmail = Boolean(officialContact?.email);
+
+  if (!officialContact || (!hasCareersUrl && !hasEmail)) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card/50 p-4">
+        <a
+          href={job.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-sm text-sm font-medium text-primary underline-offset-4 transition-all duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.93]"
+        >
+          <ExternalLink className="size-3.5" aria-hidden="true" />
+          Apply via company site
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 text-sm">
+      <h4 className="flex items-center gap-1.5 font-medium text-foreground">
+        <Building2 className="size-3.5 text-muted-foreground" aria-hidden="true" />
+        Official channels
+      </h4>
+      <ul className="flex flex-col gap-1.5">
+        {hasCareersUrl && (
+          <li>
+            <a
+              href={officialContact.careersUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-sm text-primary underline-offset-4 transition-all duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.93]"
+            >
+              <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+              Careers &amp; applications
+            </a>
+          </li>
+        )}
+        {hasEmail && (
+          <li>
+            <a
+              href={`mailto:${officialContact.email}`}
+              className="inline-flex items-center gap-1.5 rounded-sm text-primary underline-offset-4 transition-all duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.93]"
+            >
+              <Mail className="size-3.5 shrink-0" aria-hidden="true" />
+              {officialContact.email}
+            </a>
+          </li>
+        )}
+      </ul>
+    </div>
+  );
+}
+
 // Groups a flat contact list by company for demo mode, matching the "People
-// at {company}" heading style used in the live grouped view above.
+// at {company}" heading style used in the live grouped view above. Also
+// renders each company's fixture "Official channels" block so the pitch
+// demo shows the full feature with no live calls.
 function ContactGroups({
   contacts,
   onDraft,
@@ -166,6 +301,7 @@ function ContactGroups({
     <>
       {companies.map((company) => {
         const companyContacts = contacts.filter((c) => c.company === company);
+        const officialContact = DEMO_OFFICIAL_CONTACTS.find((oc) => oc.company === company) ?? null;
         return (
           <div key={company} className="flex flex-col gap-3">
             <h3 className="flex items-baseline gap-1.5 text-sm font-medium text-foreground">
@@ -181,10 +317,58 @@ function ContactGroups({
                 </li>
               ))}
             </ul>
+
+            <DemoOfficialChannels officialContact={officialContact} />
           </div>
         );
       })}
     </>
+  );
+}
+
+// Demo-mode counterpart to <OfficialChannels>, rendering the fixture data
+// directly (no loading state, since nothing is fetched in demo mode).
+function DemoOfficialChannels({ officialContact }: { officialContact: OfficialContact | null }) {
+  const hasCareersUrl = Boolean(officialContact?.careersUrl);
+  const hasEmail = Boolean(officialContact?.email);
+
+  if (!officialContact || (!hasCareersUrl && !hasEmail)) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 text-sm">
+      <h4 className="flex items-center gap-1.5 font-medium text-foreground">
+        <Building2 className="size-3.5 text-muted-foreground" aria-hidden="true" />
+        Official channels
+      </h4>
+      <ul className="flex flex-col gap-1.5">
+        {hasCareersUrl && (
+          <li>
+            <a
+              href={officialContact.careersUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-sm text-primary underline-offset-4 transition-all duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.93]"
+            >
+              <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+              Careers &amp; applications
+            </a>
+          </li>
+        )}
+        {hasEmail && (
+          <li>
+            <a
+              href={`mailto:${officialContact.email}`}
+              className="inline-flex items-center gap-1.5 rounded-sm text-primary underline-offset-4 transition-all duration-150 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.93]"
+            >
+              <Mail className="size-3.5 shrink-0" aria-hidden="true" />
+              {officialContact.email}
+            </a>
+          </li>
+        )}
+      </ul>
+    </div>
   );
 }
 
@@ -201,4 +385,19 @@ async function fetchContactsForJob(job: JobMatch): Promise<Contact[]> {
 
   const data = await res.json();
   return (data.contacts ?? []) as Contact[];
+}
+
+async function fetchOfficialContactForJob(job: JobMatch): Promise<OfficialContact | null> {
+  const res = await fetch("/api/company-contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ company: job.company, companyUrl: job.url }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`company-contact request failed (${res.status})`);
+  }
+
+  const data = await res.json();
+  return (data.contact ?? null) as OfficialContact | null;
 }

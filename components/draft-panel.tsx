@@ -175,7 +175,7 @@ export function DraftPanel({ contact }: DraftPanelProps) {
   }
 
   return (
-    <div className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-5">
+    <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-col gap-2">
         <h3 className="text-[15px] font-semibold text-foreground">Draft message</h3>
         <p className="text-sm text-muted-foreground">

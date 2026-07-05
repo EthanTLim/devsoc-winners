@@ -1,4 +1,4 @@
-import type { Profile, JobMatch, Contact } from "./schemas";
+import type { Profile, JobMatch, Contact, OfficialContact } from "./schemas";
 
 // Cached "real run" fixture used by ?demo=1 mode, the live-pitch insurance
 // policy. This is a minimal but fully-typed stub for now; issue #8 replaces
@@ -84,6 +84,26 @@ const contacts: Contact[] = [
     draftMessage:
       "Hi Priya, I came across Bright Labs while looking into small Sydney product studios and really like the focus on lean, fast-moving teams. I don't see a listed opening, but I wanted to reach out directly. I recently built an internal dashboard used by over 40 staff and cut API response times by 30% through caching, and I'd bring that same attention to performance and usability to a Frontend Engineer role at Bright Labs. Would you be open to a short chat about where the team is headed.",
     tone: "professional",
+  },
+];
+
+// Fixture "official points of contact" (public careers page + listed hiring
+// email) for the demo pitch, keyed by company. Uses the same obviously-fake
+// example.com style as the rest of this file's fixtures (not real people, so
+// this is exempt from the "never fabricate a contact" rule, which is about
+// live search results).
+export const DEMO_OFFICIAL_CONTACTS: OfficialContact[] = [
+  {
+    company: "Acme Corp",
+    careersUrl: "https://example.com/acme/careers",
+    email: "careers@example.com",
+    source: "https://example.com/acme/careers",
+  },
+  {
+    company: "Bright Labs",
+    careersUrl: "https://example.com/bright-labs/careers",
+    email: "hello@example.com",
+    source: "https://example.com/bright-labs/careers",
   },
 ];
 

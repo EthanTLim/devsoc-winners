@@ -155,7 +155,7 @@ export default function ResultsPage() {
               <ContactPanel contacts={contacts} />
             </section>
 
-            <section aria-labelledby="draft-heading" className="flex min-w-0 flex-col gap-3">
+            <section aria-labelledby="draft-heading" className="flex min-w-0 flex-col gap-3 self-start lg:sticky lg:top-10">
               <h2 id="draft-heading" className="font-medium text-foreground">
                 Draft
               </h2>

@@ -84,7 +84,7 @@ export function ProspectFirmCard({ job, selected, onToggleSelected, delay = 0 }:
           </button>
         </div>
 
-        <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           {job.fitRationale}
         </p>
 
