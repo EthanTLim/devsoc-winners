@@ -44,6 +44,49 @@ function stripJsonFences(text: string): string {
   return cleaned;
 }
 
+// Pull the outermost balanced JSON value out of a model response. The model is
+// instructed to return raw JSON only, but the Claude Agent SDK occasionally
+// wraps it in a sentence of preamble ("Here are the matches:") or a trailing
+// remark, which makes a naive JSON.parse throw. This scans for the first
+// { or [ and returns through its matching close brace/bracket (string- and
+// escape-aware), so a stray sentence around otherwise-valid JSON no longer
+// fails the whole request.
+function extractJsonCandidate(text: string): string {
+  const cleaned = stripJsonFences(text).trim();
+  if (!cleaned) return cleaned;
+
+  const start = cleaned.search(/[{[]/);
+  if (start === -1) return cleaned;
+
+  const open = cleaned[start];
+  const close = open === "{" ? "}" : "]";
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = start; i < cleaned.length; i++) {
+    const ch = cleaned[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === "\\") escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+    } else if (ch === open) {
+      depth++;
+    } else if (ch === close) {
+      depth--;
+      if (depth === 0) return cleaned.slice(start, i + 1);
+    }
+  }
+
+  // Unbalanced (e.g. truncated) — return from the first opener and let the
+  // caller's JSON.parse surface the error for the retry path.
+  return cleaned.slice(start);
+}
+
 async function completeViaClaudeAgentSdk(opts: CompleteOpts): Promise<string> {
   const { query } = await import("@anthropic-ai/claude-agent-sdk");
 
@@ -251,9 +294,11 @@ export async function completeJson<T>(opts: {
   prompt: string;
   schema: z.ZodType<T>;
 }): Promise<T> {
+  let lastRaw = "";
   const attempt = async (promptToUse: string): Promise<T> => {
     const raw = await complete({ system: opts.system, prompt: promptToUse, json: true });
-    const cleaned = stripJsonFences(raw);
+    lastRaw = raw;
+    const cleaned = extractJsonCandidate(raw);
     const parsed = JSON.parse(cleaned);
     return opts.schema.parse(parsed);
   };
@@ -262,11 +307,20 @@ export async function completeJson<T>(opts: {
     return await attempt(opts.prompt);
   } catch (firstErr) {
     const errorMessage = firstErr instanceof Error ? firstErr.message : String(firstErr);
-    const retryPrompt = `${opts.prompt}\n\nYour previous response could not be parsed as valid JSON matching the required shape. Error: ${errorMessage}\n\nReturn ONLY raw JSON matching the required shape, no markdown fences, no preamble.`;
+    const retryPrompt = `${opts.prompt}\n\nYour previous response could not be parsed as valid JSON matching the required shape. Error: ${errorMessage}\n\nReturn ONLY raw JSON matching the required shape, no markdown fences, no preamble, no commentary before or after the JSON.`;
 
     try {
       return await attempt(retryPrompt);
-    } catch {
+    } catch (secondErr) {
+      // Log the raw model output (truncated) so a persistent parse failure is
+      // diagnosable in server logs instead of vanishing behind the friendly
+      // message.
+      console.error(
+        "[completeJson] failed to parse model response after retry:",
+        secondErr instanceof Error ? secondErr.message : secondErr,
+        "\nRaw (first 600 chars):",
+        lastRaw.slice(0, 600)
+      );
       throw new Error(
         "The AI response could not be understood. Please try again in a moment."
       );

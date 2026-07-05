@@ -100,7 +100,7 @@ export function UploadDropzone() {
   if (isUploading) {
     return (
       <div
-        className="flex w-full flex-col items-center gap-4 rounded-xl border border-border bg-card/50 p-10"
+        className="flex w-full flex-col items-center gap-4 rounded-2xl border border-border bg-card/50 p-12 shadow-sm"
         role="status"
         aria-live="polite"
       >
@@ -134,11 +134,11 @@ export function UploadDropzone() {
       whileTap={{ scale: 0.93 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       className={cn(
-        "flex w-full cursor-pointer flex-col items-center gap-4 rounded-xl border border-dashed p-10 outline-none transition-colors duration-300",
+        "flex w-full cursor-pointer flex-col items-center gap-4 rounded-2xl border border-dashed p-12 shadow-sm outline-none transition-colors duration-300",
         "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         isDragging
-          ? "border-primary bg-primary/10"
-          : "border-border bg-card/50 hover:border-primary/50 hover:bg-card/70"
+          ? "border-primary bg-accent"
+          : "border-border bg-card/50 hover:border-primary/40 hover:bg-accent/40"
       )}
     >
       <input

@@ -72,7 +72,7 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
     if (contacts.length === 0) {
       return (
         <div
-          className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10"
+          className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10"
           aria-label="No contacts"
         >
           <p className="text-sm text-muted-foreground">
@@ -82,20 +82,16 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
       );
     }
     return (
-      <ul className="flex flex-col gap-3" aria-label="Contacts">
-        {contacts.map((contact) => (
-          <li key={contact.id}>
-            <ContactCard contact={contact} onDraft={setActiveContact} />
-          </li>
-        ))}
-      </ul>
+      <div className="flex flex-col gap-3">
+        <ContactGroups contacts={contacts} onDraft={setActiveContact} />
+      </div>
     );
   }
 
   if (selectedJobs.length === 0) {
     return (
       <div
-        className="flex min-h-[200px] items-center justify-center rounded-xl border border-dashed border-border bg-card/50 p-10 text-center"
+        className="flex min-h-[200px] items-center justify-center rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center"
         aria-label="No jobs starred yet"
       >
         <p className="text-sm text-muted-foreground">
@@ -108,44 +104,87 @@ export function ContactPanel({ contacts }: ContactPanelProps) {
   }
 
   return (
-    <ul className="flex flex-col gap-3" aria-label="Contacts">
+    <div className="flex flex-col gap-5">
       {selectedJobs.map((job) => {
         const jobContacts = contacts.filter((c) => c.jobId === job.id);
         const status = statusByJobId[job.id] ?? "idle";
 
-        if (jobContacts.length > 0) {
-          return jobContacts.map((contact) => (
-            <li key={contact.id}>
-              <ContactCard contact={contact} onDraft={setActiveContact} />
-            </li>
-          ));
-        }
-
-        if (status === "loading" || status === "idle") {
-          return (
-            <li key={job.id} className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-              <Skeleton className="h-4 w-2/5" />
-              <Skeleton className="h-3 w-3/5" />
-              <Skeleton className="h-3 w-1/3" />
-            </li>
-          );
-        }
-
-        // "done" with zero contacts, or "error": both resolve to the same
-        // graceful, designed empty state. We never fabricate a person to
-        // fill the slot.
         return (
-          <li
-            key={job.id}
-            className="flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border bg-card/50 p-4 text-center"
-          >
-            <p className="text-sm text-muted-foreground">
-              No public contacts found for {job.company}, apply directly.
-            </p>
-          </li>
+          <div key={job.id} className="flex flex-col gap-3">
+            <h3 className="flex items-baseline gap-1.5 text-sm font-medium text-foreground">
+              People at {job.company}
+              {jobContacts.length > 0 && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  ({jobContacts.length})
+                </span>
+              )}
+            </h3>
+
+            {jobContacts.length > 0 ? (
+              <ul className="flex flex-col gap-3" aria-label={`Contacts at ${job.company}`}>
+                {jobContacts.map((contact) => (
+                  <li key={contact.id}>
+                    <ContactCard contact={contact} onDraft={setActiveContact} />
+                  </li>
+                ))}
+              </ul>
+            ) : status === "loading" || status === "idle" ? (
+              <div className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4">
+                <Skeleton className="h-4 w-2/5" />
+                <Skeleton className="h-3 w-3/5" />
+                <Skeleton className="h-3 w-1/3" />
+              </div>
+            ) : (
+              // "done" with zero contacts, or "error": both resolve to the
+              // same graceful, designed empty state. We never fabricate a
+              // person to fill the slot.
+              <div className="flex min-h-[96px] flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border bg-card/50 p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  No public contacts found for {job.company}, apply directly.
+                </p>
+              </div>
+            )}
+          </div>
         );
       })}
-    </ul>
+    </div>
+  );
+}
+
+// Groups a flat contact list by company for demo mode, matching the "People
+// at {company}" heading style used in the live grouped view above.
+function ContactGroups({
+  contacts,
+  onDraft,
+}: {
+  contacts: Contact[];
+  onDraft: (id: string) => void;
+}) {
+  const companies = Array.from(new Set(contacts.map((c) => c.company)));
+
+  return (
+    <>
+      {companies.map((company) => {
+        const companyContacts = contacts.filter((c) => c.company === company);
+        return (
+          <div key={company} className="flex flex-col gap-3">
+            <h3 className="flex items-baseline gap-1.5 text-sm font-medium text-foreground">
+              People at {company}
+              <span className="text-xs font-normal text-muted-foreground">
+                ({companyContacts.length})
+              </span>
+            </h3>
+            <ul className="flex flex-col gap-3" aria-label={`Contacts at ${company}`}>
+              {companyContacts.map((contact) => (
+                <li key={contact.id}>
+                  <ContactCard contact={contact} onDraft={onDraft} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
+    </>
   );
 }
 

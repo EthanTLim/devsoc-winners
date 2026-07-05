@@ -51,8 +51,26 @@ export const JobMatchSchema = z.object({
   // genuinely appears in the posting text. Optional so existing data
   // (and jobs with no stated deadline) still validate.
   deadline: z.string().optional(),
+  // "listed" = a real public job posting (the default when omitted).
+  // "potential" = a small/mid firm surfaced as a cold-outreach prospect,
+  // not an advertised role.
+  kind: z.enum(["listed", "potential"]).optional(),
+  // Only ever set on kind:"potential" firms. The discover-firms pipeline only
+  // emits high/medium prospects; low-likelihood firms are dropped, never shown.
+  hiringLikelihood: z.enum(["high", "medium"]).optional(),
 });
 export type JobMatch = z.infer<typeof JobMatchSchema>;
+
+// Structured delta produced by the /api/refine pipeline (see
+// PRD.md/CLAUDE.md pipeline #5). All fields optional: the model omits
+// whatever the user's free-text instruction didn't imply.
+export const RefineDeltaSchema = z.object({
+  locations: z.array(z.string()).optional(),
+  remote: z.enum(["remote", "hybrid", "onsite", "any"]).optional(),
+  roleShift: z.string().optional(),
+  messageEdit: z.string().optional(),
+});
+export type RefineDelta = z.infer<typeof RefineDeltaSchema>;
 
 export const ContactSchema = z.object({
   id: z.string(),
