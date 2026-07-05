@@ -109,8 +109,22 @@ export function DraftPanel({ contact }: DraftPanelProps) {
 
   useEffect(() => {
     if (!contact) return;
-    setTone(contact.tone ?? "professional");
-    runDraft(contact, contact.tone ?? "professional");
+    const initialTone = contact.tone ?? "professional";
+    setTone(initialTone);
+    // If this contact already has a saved draft (demo fixtures, or a message
+    // generated earlier this session), show it immediately instead of asking
+    // the AI to rewrite it. This is also what makes demo mode work: the store
+    // has no profile in demo, so runDraft would otherwise bail and leave the
+    // panel empty.
+    if (contact.draftMessage) {
+      requestIdRef.current++; // cancel any in-flight stream
+      cacheRef.current.set(cacheKey(contact.id, initialTone), contact.draftMessage);
+      setDraft(contact.draftMessage);
+      setStatus("done");
+      setCopied(false);
+      return;
+    }
+    runDraft(contact, initialTone);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contact?.id]);
 
@@ -164,19 +178,10 @@ export function DraftPanel({ contact }: DraftPanelProps) {
     <div className="flex h-full flex-col gap-5 rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-col gap-2">
         <h3 className="text-[15px] font-semibold text-foreground">Draft message</h3>
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-muted-foreground">
-            To <span className="font-medium text-foreground">{contact.name}</span>
-            {job ? ` · re: ${job.title}` : ""}
-          </p>
-          <button
-            type="button"
-            onClick={() => toast("Pick a different contact from the list to change this")}
-            className="shrink-0 text-xs font-medium text-primary hover:underline"
-          >
-            Change
-          </button>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          To <span className="font-medium text-foreground">{contact.name}</span>
+          {job ? ` · re: ${job.title}` : ""}
+        </p>
       </div>
 
       <Tabs value={tone} onValueChange={handleToneChange}>
