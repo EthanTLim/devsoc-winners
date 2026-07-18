@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1784352059358" clover="3.2.0">
+  <project timestamp="1784352059358" name="All files">
+    <metrics statements="217" coveredstatements="210" conditionals="150" coveredconditionals="135" methods="50" coveredmethods="42" elements="417" coveredelements="387" complexity="0" loc="217" ncloc="217" packages="1" files="8" classes="8"/>
+    <file name="adzuna.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/adzuna.ts">
+      <metrics statements="41" coveredstatements="41" conditionals="40" coveredconditionals="34" methods="5" coveredmethods="4"/>
+      <line num="5" count="1" type="stmt"/>
+      <line num="42" count="8" type="stmt"/>
+      <line num="43" count="8" type="stmt"/>
+      <line num="44" count="8" type="cond" truecount="4" falsecount="0"/>
+      <line num="45" count="1" type="stmt"/>
+      <line num="47" count="7" type="stmt"/>
+      <line num="51" count="5" type="cond" truecount="2" falsecount="0"/>
+      <line num="52" count="1" type="stmt"/>
+      <line num="55" count="4" type="stmt"/>
+      <line num="56" count="4" type="cond" truecount="4" falsecount="0"/>
+      <line num="57" count="2" type="cond" truecount="1" falsecount="1"/>
+      <line num="58" count="2" type="cond" truecount="2" falsecount="0"/>
+      <line num="59" count="2" type="cond" truecount="4" falsecount="0"/>
+      <line num="60" count="1" type="stmt"/>
+      <line num="61" count="1" type="cond" truecount="2" falsecount="2"/>
+      <line num="62" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="65" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="66" count="1" type="stmt"/>
+      <line num="68" count="4" type="stmt"/>
+      <line num="69" count="4" type="stmt"/>
+      <line num="71" count="4" type="stmt"/>
+      <line num="90" count="8" type="stmt"/>
+      <line num="91" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="92" count="1" type="stmt"/>
+      <line num="95" count="7" type="cond" truecount="2" falsecount="0"/>
+      <line num="96" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="98" count="8" type="stmt"/>
+      <line num="106" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="107" count="1" type="stmt"/>
+      <line num="110" count="7" type="stmt"/>
+      <line num="111" count="7" type="stmt"/>
+      <line num="113" count="6" type="cond" truecount="2" falsecount="0"/>
+      <line num="114" count="1" type="stmt"/>
+      <line num="115" count="1" type="stmt"/>
+      <line num="116" count="1" type="stmt"/>
+      <line num="119" count="5" type="stmt"/>
+      <line num="120" count="5" type="cond" truecount="1" falsecount="1"/>
+      <line num="122" count="5" type="stmt"/>
+      <line num="124" count="8" type="stmt"/>
+      <line num="126" count="1" type="stmt"/>
+      <line num="127" count="1" type="stmt"/>
+    </file>
+    <file name="demo-fixtures.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/demo-fixtures.ts">
+      <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <line num="8" count="1" type="stmt"/>
+      <line num="39" count="1" type="stmt"/>
+      <line num="65" count="1" type="stmt"/>
+      <line num="90" count="1" type="stmt"/>
+    </file>
+    <file name="exa.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/exa.ts">
+      <metrics statements="14" coveredstatements="14" conditionals="18" coveredconditionals="17" methods="7" coveredmethods="6"/>
+      <line num="8" count="1" type="stmt"/>
+      <line num="23" count="9" type="stmt"/>
+      <line num="24" count="9" type="cond" truecount="2" falsecount="0"/>
+      <line num="25" count="1" type="stmt"/>
+      <line num="27" count="8" type="stmt"/>
+      <line num="31" count="9" type="stmt"/>
+      <line num="40" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="41" count="1" type="stmt"/>
+      <line num="42" count="1" type="stmt"/>
+      <line num="45" count="7" type="stmt"/>
+      <line num="69" count="6" type="stmt"/>
+      <line num="92" count="1" type="stmt"/>
+      <line num="110" count="1" type="stmt"/>
+      <line num="130" count="1" type="stmt"/>
+    </file>
+    <file name="llm.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/llm.ts">
+      <metrics statements="123" coveredstatements="119" conditionals="84" coveredconditionals="76" methods="13" coveredmethods="11"/>
+      <line num="32" count="20" type="stmt"/>
+      <line num="33" count="20" type="cond" truecount="2" falsecount="0"/>
+      <line num="34" count="7" type="stmt"/>
+      <line num="38" count="30" type="stmt"/>
+      <line num="40" count="30" type="stmt"/>
+      <line num="41" count="30" type="cond" truecount="2" falsecount="0"/>
+      <line num="42" count="5" type="stmt"/>
+      <line num="44" count="30" type="stmt"/>
+      <line num="55" count="17" type="stmt"/>
+      <line num="56" count="17" type="cond" truecount="2" falsecount="0"/>
+      <line num="58" count="16" type="stmt"/>
+      <line num="59" count="16" type="cond" truecount="2" falsecount="0"/>
+      <line num="61" count="12" type="stmt"/>
+      <line num="62" count="12" type="cond" truecount="2" falsecount="0"/>
+      <line num="63" count="17" type="stmt"/>
+      <line num="64" count="17" type="stmt"/>
+      <line num="65" count="17" type="stmt"/>
+      <line num="67" count="17" type="stmt"/>
+      <line num="68" count="193" type="stmt"/>
+      <line num="69" count="193" type="cond" truecount="2" falsecount="0"/>
+      <line num="70" count="103" type="cond" truecount="4" falsecount="0"/>
+      <line num="71" count="99" type="cond" truecount="2" falsecount="0"/>
+      <line num="72" count="19" type="stmt"/>
+      <line num="73" count="103" type="stmt"/>
+      <line num="75" count="90" type="cond" truecount="2" falsecount="0"/>
+      <line num="76" count="19" type="stmt"/>
+      <line num="77" count="71" type="cond" truecount="2" falsecount="0"/>
+      <line num="78" count="14" type="stmt"/>
+      <line num="79" count="57" type="cond" truecount="2" falsecount="0"/>
+      <line num="80" count="13" type="stmt"/>
+      <line num="81" count="13" type="cond" truecount="2" falsecount="0"/>
+      <line num="87" count="1" type="stmt"/>
+      <line num="91" count="5" type="stmt"/>
+      <line num="93" count="5" type="stmt"/>
+      <line num="102" count="5" type="stmt"/>
+      <line num="103" count="5" type="stmt"/>
+      <line num="104" count="4" type="cond" truecount="1" falsecount="1"/>
+      <line num="105" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="106" count="3" type="stmt"/>
+      <line num="108" count="1" type="stmt"/>
+      <line num="113" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="114" count="1" type="stmt"/>
+      <line num="117" count="3" type="stmt"/>
+      <line num="121" count="8" type="stmt"/>
+      <line num="122" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="124" count="8" type="cond" truecount="1" falsecount="1"/>
+      <line num="125" count="0" type="stmt"/>
+      <line num="128" count="8" type="stmt"/>
+      <line num="143" count="8" type="cond" truecount="1" falsecount="1"/>
+      <line num="144" count="0" type="stmt"/>
+      <line num="145" count="0" type="stmt"/>
+      <line num="148" count="8" type="stmt"/>
+      <line num="149" count="8" type="stmt"/>
+      <line num="150" count="8" type="cond" truecount="3" falsecount="1"/>
+      <line num="151" count="0" type="stmt"/>
+      <line num="153" count="8" type="stmt"/>
+      <line num="161" count="13" type="stmt"/>
+      <line num="163" count="13" type="cond" truecount="2" falsecount="0"/>
+      <line num="167" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="176" count="7" type="stmt"/>
+      <line num="177" count="7" type="stmt"/>
+      <line num="179" count="7" type="cond" truecount="2" falsecount="0"/>
+      <line num="180" count="5" type="stmt"/>
+      <line num="182" count="5" type="stmt"/>
+      <line num="183" count="5" type="stmt"/>
+      <line num="184" count="5" type="cond" truecount="2" falsecount="0"/>
+      <line num="185" count="5" type="cond" truecount="2" falsecount="0"/>
+      <line num="186" count="1" type="stmt"/>
+      <line num="189" count="4" type="stmt"/>
+      <line num="205" count="4" type="cond" truecount="4" falsecount="0"/>
+      <line num="206" count="1" type="stmt"/>
+      <line num="207" count="1" type="stmt"/>
+      <line num="210" count="3" type="stmt"/>
+      <line num="211" count="3" type="stmt"/>
+      <line num="212" count="3" type="stmt"/>
+      <line num="214" count="3" type="stmt"/>
+      <line num="215" count="6" type="stmt"/>
+      <line num="216" count="6" type="cond" truecount="2" falsecount="0"/>
+      <line num="217" count="3" type="stmt"/>
+      <line num="219" count="3" type="stmt"/>
+      <line num="220" count="3" type="cond" truecount="1" falsecount="1"/>
+      <line num="222" count="6" type="stmt"/>
+      <line num="223" count="8" type="stmt"/>
+      <line num="224" count="8" type="cond" truecount="2" falsecount="0"/>
+      <line num="225" count="7" type="stmt"/>
+      <line num="226" count="7" type="cond" truecount="2" falsecount="0"/>
+      <line num="227" count="4" type="stmt"/>
+      <line num="228" count="4" type="stmt"/>
+      <line num="229" count="4" type="stmt"/>
+      <line num="230" count="8" type="cond" truecount="4" falsecount="0"/>
+      <line num="231" count="3" type="stmt"/>
+      <line num="239" count="3" type="stmt"/>
+      <line num="241" count="2" type="stmt"/>
+      <line num="249" count="2" type="stmt"/>
+      <line num="251" count="2" type="stmt"/>
+      <line num="252" count="2" type="stmt"/>
+      <line num="254" count="2" type="stmt"/>
+      <line num="263" count="2" type="stmt"/>
+      <line num="264" count="3" type="cond" truecount="2" falsecount="0"/>
+      <line num="265" count="1" type="stmt"/>
+      <line num="266" count="1" type="cond" truecount="1" falsecount="1"/>
+      <line num="267" count="1" type="stmt"/>
+      <line num="268" count="3" type="cond" truecount="4" falsecount="0"/>
+      <line num="269" count="2" type="stmt"/>
+      <line num="273" count="2" type="cond" truecount="4" falsecount="0"/>
+      <line num="274" count="1" type="stmt"/>
+      <line num="278" count="1" type="stmt"/>
+      <line num="280" count="1" type="stmt"/>
+      <line num="297" count="5" type="stmt"/>
+      <line num="298" count="5" type="stmt"/>
+      <line num="299" count="8" type="stmt"/>
+      <line num="300" count="8" type="stmt"/>
+      <line num="301" count="8" type="stmt"/>
+      <line num="302" count="8" type="stmt"/>
+      <line num="303" count="8" type="stmt"/>
+      <line num="306" count="5" type="stmt"/>
+      <line num="307" count="5" type="stmt"/>
+      <line num="309" count="3" type="cond" truecount="1" falsecount="1"/>
+      <line num="310" count="3" type="stmt"/>
+      <line num="312" count="3" type="stmt"/>
+      <line num="313" count="3" type="stmt"/>
+      <line num="318" count="1" type="stmt"/>
+      <line num="324" count="1" type="stmt"/>
+    </file>
+    <file name="prompts.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/prompts.ts">
+      <metrics statements="7" coveredstatements="7" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <line num="9" count="1" type="stmt"/>
+      <line num="39" count="1" type="stmt"/>
+      <line num="74" count="1" type="stmt"/>
+      <line num="107" count="1" type="stmt"/>
+      <line num="125" count="1" type="stmt"/>
+      <line num="144" count="1" type="stmt"/>
+      <line num="160" count="1" type="stmt"/>
+    </file>
+    <file name="schemas.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/schemas.ts">
+      <metrics statements="7" coveredstatements="7" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <line num="7" count="2" type="stmt"/>
+      <line num="15" count="2" type="stmt"/>
+      <line num="22" count="2" type="stmt"/>
+      <line num="29" count="2" type="stmt"/>
+      <line num="41" count="2" type="stmt"/>
+      <line num="72" count="2" type="stmt"/>
+      <line num="80" count="2" type="stmt"/>
+    </file>
+    <file name="store.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/store.ts">
+      <metrics statements="20" coveredstatements="17" conditionals="8" coveredconditionals="8" methods="24" coveredmethods="20"/>
+      <line num="34" count="1" type="stmt"/>
+      <line num="53" count="1" type="stmt"/>
+      <line num="55" count="1" type="stmt"/>
+      <line num="58" count="1" type="stmt"/>
+      <line num="59" count="0" type="stmt"/>
+      <line num="61" count="7" type="stmt"/>
+      <line num="64" count="7" type="cond" truecount="2" falsecount="0"/>
+      <line num="69" count="2" type="stmt"/>
+      <line num="71" count="4" type="cond" truecount="2" falsecount="0"/>
+      <line num="74" count="1" type="stmt"/>
+      <line num="75" count="0" type="stmt"/>
+      <line num="77" count="1" type="stmt"/>
+      <line num="78" count="2" type="cond" truecount="2" falsecount="0"/>
+      <line num="80" count="1" type="stmt"/>
+      <line num="82" count="2" type="stmt"/>
+      <line num="84" count="1" type="stmt"/>
+      <line num="87" count="2" type="stmt"/>
+      <line num="88" count="0" type="stmt"/>
+      <line num="89" count="9" type="stmt"/>
+      <line num="93" count="1" type="stmt"/>
+    </file>
+    <file name="utils.ts" path="/Users/xiaoren/Downloads/Projects/hackathon/inroad/devsoc-winners/lib/utils.ts">
+      <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+      <line num="5" count="2" type="stmt"/>
+    </file>
+  </project>
+</coverage>

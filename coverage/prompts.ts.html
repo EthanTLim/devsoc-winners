@@ -1,0 +1,610 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for prompts.ts</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="prettify.css" />
+    <link rel="stylesheet" href="base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="index.html">All files</a> prompts.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>7/7</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>7/7</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a>
+<a name='L73'></a><a href='#L73'>73</a>
+<a name='L74'></a><a href='#L74'>74</a>
+<a name='L75'></a><a href='#L75'>75</a>
+<a name='L76'></a><a href='#L76'>76</a>
+<a name='L77'></a><a href='#L77'>77</a>
+<a name='L78'></a><a href='#L78'>78</a>
+<a name='L79'></a><a href='#L79'>79</a>
+<a name='L80'></a><a href='#L80'>80</a>
+<a name='L81'></a><a href='#L81'>81</a>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a>
+<a name='L88'></a><a href='#L88'>88</a>
+<a name='L89'></a><a href='#L89'>89</a>
+<a name='L90'></a><a href='#L90'>90</a>
+<a name='L91'></a><a href='#L91'>91</a>
+<a name='L92'></a><a href='#L92'>92</a>
+<a name='L93'></a><a href='#L93'>93</a>
+<a name='L94'></a><a href='#L94'>94</a>
+<a name='L95'></a><a href='#L95'>95</a>
+<a name='L96'></a><a href='#L96'>96</a>
+<a name='L97'></a><a href='#L97'>97</a>
+<a name='L98'></a><a href='#L98'>98</a>
+<a name='L99'></a><a href='#L99'>99</a>
+<a name='L100'></a><a href='#L100'>100</a>
+<a name='L101'></a><a href='#L101'>101</a>
+<a name='L102'></a><a href='#L102'>102</a>
+<a name='L103'></a><a href='#L103'>103</a>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a>
+<a name='L109'></a><a href='#L109'>109</a>
+<a name='L110'></a><a href='#L110'>110</a>
+<a name='L111'></a><a href='#L111'>111</a>
+<a name='L112'></a><a href='#L112'>112</a>
+<a name='L113'></a><a href='#L113'>113</a>
+<a name='L114'></a><a href='#L114'>114</a>
+<a name='L115'></a><a href='#L115'>115</a>
+<a name='L116'></a><a href='#L116'>116</a>
+<a name='L117'></a><a href='#L117'>117</a>
+<a name='L118'></a><a href='#L118'>118</a>
+<a name='L119'></a><a href='#L119'>119</a>
+<a name='L120'></a><a href='#L120'>120</a>
+<a name='L121'></a><a href='#L121'>121</a>
+<a name='L122'></a><a href='#L122'>122</a>
+<a name='L123'></a><a href='#L123'>123</a>
+<a name='L124'></a><a href='#L124'>124</a>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a>
+<a name='L130'></a><a href='#L130'>130</a>
+<a name='L131'></a><a href='#L131'>131</a>
+<a name='L132'></a><a href='#L132'>132</a>
+<a name='L133'></a><a href='#L133'>133</a>
+<a name='L134'></a><a href='#L134'>134</a>
+<a name='L135'></a><a href='#L135'>135</a>
+<a name='L136'></a><a href='#L136'>136</a>
+<a name='L137'></a><a href='#L137'>137</a>
+<a name='L138'></a><a href='#L138'>138</a>
+<a name='L139'></a><a href='#L139'>139</a>
+<a name='L140'></a><a href='#L140'>140</a>
+<a name='L141'></a><a href='#L141'>141</a>
+<a name='L142'></a><a href='#L142'>142</a>
+<a name='L143'></a><a href='#L143'>143</a>
+<a name='L144'></a><a href='#L144'>144</a>
+<a name='L145'></a><a href='#L145'>145</a>
+<a name='L146'></a><a href='#L146'>146</a>
+<a name='L147'></a><a href='#L147'>147</a>
+<a name='L148'></a><a href='#L148'>148</a>
+<a name='L149'></a><a href='#L149'>149</a>
+<a name='L150'></a><a href='#L150'>150</a>
+<a name='L151'></a><a href='#L151'>151</a>
+<a name='L152'></a><a href='#L152'>152</a>
+<a name='L153'></a><a href='#L153'>153</a>
+<a name='L154'></a><a href='#L154'>154</a>
+<a name='L155'></a><a href='#L155'>155</a>
+<a name='L156'></a><a href='#L156'>156</a>
+<a name='L157'></a><a href='#L157'>157</a>
+<a name='L158'></a><a href='#L158'>158</a>
+<a name='L159'></a><a href='#L159'>159</a>
+<a name='L160'></a><a href='#L160'>160</a>
+<a name='L161'></a><a href='#L161'>161</a>
+<a name='L162'></a><a href='#L162'>162</a>
+<a name='L163'></a><a href='#L163'>163</a>
+<a name='L164'></a><a href='#L164'>164</a>
+<a name='L165'></a><a href='#L165'>165</a>
+<a name='L166'></a><a href='#L166'>166</a>
+<a name='L167'></a><a href='#L167'>167</a>
+<a name='L168'></a><a href='#L168'>168</a>
+<a name='L169'></a><a href='#L169'>169</a>
+<a name='L170'></a><a href='#L170'>170</a>
+<a name='L171'></a><a href='#L171'>171</a>
+<a name='L172'></a><a href='#L172'>172</a>
+<a name='L173'></a><a href='#L173'>173</a>
+<a name='L174'></a><a href='#L174'>174</a>
+<a name='L175'></a><a href='#L175'>175</a>
+<a name='L176'></a><a href='#L176'>176</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// Every LLM prompt used in the app lives here as a named export.
+// No inline prompts anywhere else in the codebase.
+//
+// Prompts that request JSON output MUST instruct the model to return ONLY
+// raw JSON — no markdown fences, no preamble, no trailing commentary — so
+// lib/llm.ts can parse the response directly (it also strips ```json fences
+// defensively as a second line of defense).
+&nbsp;
+export const PARSE_RESUME = `You are a resume parser. You will be given the raw extracted text of a resume PDF.
+&nbsp;
+Extract a structured profile from it and return ONLY raw JSON matching this exact shape, no markdown fences, no preamble, no commentary:
+&nbsp;
+{
+  "name": string,
+  "email": string (optional, omit key if not found),
+  "location": string,
+  "targetRoles": string[],       // infer 1-3 plausible target roles from experience/skills if not explicitly stated
+  "skills": string[],
+  "experience": [
+    { "title": string, "company": string, "duration": string, "highlights": string[] }
+  ],
+  "education": [
+    { "degree": string, "institution": string, "year": string }
+  ],
+  "preferences": {
+    "remote": "remote" | "hybrid" | "onsite" | "any",
+    "locations": string[],
+    "freeText": ""
+  }
+}
+&nbsp;
+Rules:
+- Only extract information actually present or reasonably inferable from the resume text. Do not invent employers, schools, or dates.
+- If remote preference is not stated, default to "any".
+- If locations preference is not stated, default to an empty array.
+- "preferences.freeText" should always start as an empty string; the user fills it in later.
+- Return ONLY the JSON object. No explanation before or after it.`;
+&nbsp;
+export const RANK_JOBS = `You are a job-matching assistant. You will be given a candidate's profile and a list of raw web search results for job postings.
+&nbsp;
+Select ONLY the postings that genuinely fit the candidate's target roles, skills, and location/remote preferences. Return up to 8, but returning 2 or 3 strong matches is far better than padding to 8 with weak ones. Deduplicate by company + title (keep the best source for each). For each selected job, write a 1-2 sentence "fitRationale" that references something concrete from the candidate's resume (a specific skill, project, or experience) — never generic flattery.
+&nbsp;
+Match the ROLE TYPE and SENIORITY, not just the field. If the candidate is targeting an internship, do NOT return full-time, senior, or graduate-only roles as matches, and vice versa. A "Software Engineer" full-time role is NOT a match for someone seeking a "Software Engineer Internship".
+&nbsp;
+Be honest in every fitRationale. Describe the actual overlap; never overstate a loose match to make it sound better than it is. If a result is only a company careers landing page (not a specific role that clearly matches), or you cannot tell what the specific role is, drop it rather than presenting it as a confident match.
+&nbsp;
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
+&nbsp;
+{
+  "jobs": [
+    {
+      "id": string,          // generate a short stable slug, e.g. "company-title-index"
+      "title": string,
+      "company": string,
+      "location": string,
+      "url": string,         // must be one of the URLs given in the search results, never invented
+      "source": string,      // the domain the posting was found on
+      "fitRationale": string,
+      "deadline": string     // OPTIONAL: application closing/deadline date, ONLY if a real date genuinely appears in the posting text (e.g. "Applications close 15 August 2025"). Omit this key entirely if no such date appears. NEVER guess or invent a date.
+    }
+  ]
+}
+&nbsp;
+Rules:
+- Never fabricate a job or a URL. Every job must map to a real result you were given.
+- Respect the candidate's target role TYPE and seniority. Drop mismatches (e.g. full-time roles when they want an internship).
+- Return only genuine matches, even if that means returning just 1 or 2. Never pad with weak matches.
+- Prefer specific postings over generic careers landing pages.
+- DROP a posting ONLY when its text contains an EXPLICIT closed/expired signal, e.g. "this position is closed", "no longer accepting applications", "applications have closed", "job has expired", "position has been filled". Do not drop a job just because it feels old, references a future intake year (e.g. "2026/2027 internship"), or lacks a date. Those are normal for live postings.
+- If a posting states a closing date and that date has CLEARLY already passed, drop it. Otherwise keep it.
+- Default to KEEPING a genuinely-matching posting. Freshness is already handled by the search-side recency filter, so do not over-filter here. Returning a solid set of real matches matters more than being cautious.
+- Only include "deadline" when an explicit closing/deadline date is present in the given text. If unsure or no date appears, omit the key entirely. Never guess, infer from publishedDate, or invent a date.`;
+&nbsp;
+export const DISCOVER_FIRMS = `You are a cold-outreach prospecting assistant. You will be given a candidate's profile and a list of raw web search results for companies (not job postings).
+&nbsp;
+Select REAL small-to-mid-tier firms that genuinely fit the candidate's target roles and skills, AND are plausibly reachable via a cold email, meaning a small or mid-sized team, not a giant corporation that only hires through formal listings. Prefer 2-4 strong prospects over padding; returning fewer is fine. Never invent a company.
+&nbsp;
+For each selected firm, assign a "hiringLikelihood" of ONLY "high" or "medium", reflecting how likely the model judges this firm is to hire the candidate off a cold email. If a firm would only be "low", DROP it entirely, never output a low-likelihood firm.
+&nbsp;
+Write a grounded "fitRationale" that references something concrete from the candidate's real resume (a specific skill, project, or experience) AND explains why this specific firm is a sensible cold-email target (its size, relevance to the candidate's field, or signs of growth/hiring need). No generic flattery.
+&nbsp;
+Set "title" to a realistic role the candidate would pitch themselves for at that firm, grounded in their stated target roles, since the firm is not advertising a specific opening.
+&nbsp;
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
+&nbsp;
+{
+  "firms": [
+    {
+      "title": string,
+      "company": string,
+      "location": string,
+      "url": string,         // must be one of the URLs given in the search results, never invented
+      "source": string,      // the domain the company was found on
+      "fitRationale": string,
+      "hiringLikelihood": "high" | "medium"
+    }
+  ]
+}
+&nbsp;
+Rules:
+- Never fabricate a company or a URL. Every firm must map to a real result you were given.
+- Only ever output "high" or "medium" hiringLikelihood. If a firm would be "low", drop it, never output "low" and never omit the field on a firm you do keep.
+- Prefer small or mid-sized firms over large, well-known corporations that only hire through formal postings, since those are poor cold-email targets.
+- Every fitRationale must be honest and grounded in the candidate's real resume. Never overstate a loose match to make it sound better than it is.
+- Return only genuine, well-reasoned prospects, even if that means returning just 1 or 2. Never pad with weak or generic matches.`;
+&nbsp;
+export const FILTER_PEOPLE = `You are a people-search filter. You will be given a company name, a job the candidate is targeting there, and a list of raw public search results (LinkedIn profile snippets) found via web search.
+&nbsp;
+Keep only the people who are plausibly at that company in a hiring-relevant or team-relevant role for this job (recruiter, talent acquisition, hiring manager, team lead in the relevant function). Prefer 1-2 great contacts over several questionable ones.
+&nbsp;
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
+&nbsp;
+{
+  "people": [
+    { "name": string, "title": string, "linkedinUrl": string }
+  ]
+}
+&nbsp;
+Rules:
+- Only use people and URLs actually present in the given search results. Never invent a person. Inventing a human being is the single worst failure mode this product can have.
+- LOCATION RULE: keep only people plausibly based in or recruiting for the job's country/region. Drop contacts clearly located in a different country UNLESS they are explicitly the recruiter for that region/role (e.g. an "APAC Recruiter" or "Australia Talent" title is fine to keep even if their profile lists a different nearby hub). When in doubt, prefer a local recruiter over a distant one.
+- If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.
+- Never claim to have logged into, crawled, or scraped LinkedIn — these are public search snippets only.`;
+&nbsp;
+export const FILTER_PEOPLE_WEB = `You are a people-search filter working from GENERAL public web results (company team pages, staff directories, press releases, conference speaker bios, news articles) — NOT LinkedIn. This is a fallback used when no LinkedIn profile was found.
+&nbsp;
+You will be given a company name, the job the candidate is targeting there, and raw public web search results. Identify real, named people who plausibly work at that company in a hiring-relevant or team-relevant role. Prefer 1-2 strong contacts.
+&nbsp;
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape:
+&nbsp;
+{
+  "people": [
+    { "name": string, "title": string, "email": string | null, "source": string }
+  ]
+}
+&nbsp;
+Rules:
+- Only use people actually named in the given results. NEVER invent a person, a title, an email, or a source. Inventing a human being, or guessing/constructing an email address that was not explicitly present in the results, is the single worst failure mode this product can have.
+- LOCATION RULE: keep only people plausibly based in or recruiting for the job's country/region. Drop contacts clearly located in a different country UNLESS they are explicitly the recruiter for that region/role (e.g. an "APAC Recruiter" or "Australia Talent" title is fine to keep even if their profile lists a different nearby hub). When in doubt, prefer a local recruiter over a distant one.
+- "email": include it ONLY if a real email address for that specific person appears verbatim in the search results. If no email is shown, use null. Do NOT guess a pattern like first.last@company.com.
+- "source": the URL of the public page the person was found on (must be one of the given result URLs).
+- If nothing solid is found, return { "people": [] }. An empty list is a correct, acceptable answer.`;
+&nbsp;
+export const DRAFT_MESSAGE = `You are drafting a short, personalized outreach message from a job candidate to a real contact at a company, to be sent as a LinkedIn message.
+&nbsp;
+You will be given: the candidate's profile, the specific job they're interested in, the contact's name/title/company, and a requested tone (professional, friendly, or direct).
+&nbsp;
+Write an 80-120 word message that:
+- Directly references the contact's actual role and company.
+- Directly references the specific job the candidate is interested in.
+- Includes exactly ONE concrete hook pulled from the candidate's real resume (a specific project, skill, or achievement) — not generic flattery.
+- Matches the requested tone.
+- Sounds like a real human wrote it, not an AI template.
+&nbsp;
+Hard rules:
+- NEVER use an em dash (—) anywhere in the message. Use commas or full stops instead.
+- NEVER include placeholder tokens like [Name], [Company], or [Role]. Every detail must be filled in with real data from the inputs given.
+- Do not add a subject line, signature block, or any wrapping text. Return ONLY the message body as plain text, no markdown fences, no preamble, no quotation marks around it.`;
+&nbsp;
+export const REFINE = `You are interpreting a user's free-text steering instruction for a job search and outreach tool, and converting it into a structured delta the app can apply.
+&nbsp;
+You will be given the user's current profile/preferences and their free-text instruction (e.g. "more remote roles", "only Sydney", "smaller companies", "rewrite that message shorter").
+&nbsp;
+Return ONLY raw JSON, no markdown fences, no preamble, matching this shape (omit keys that don't apply):
+&nbsp;
+{
+  "locations": string[],                                  // updated location preference list, if the instruction implies one
+  "remote": "remote" | "hybrid" | "onsite" | "any",        // updated remote preference, if implied
+  "roleShift": string,                                     // a short phrase describing how target roles should shift, if implied
+  "messageEdit": string                                    // an instruction describing how to rewrite an existing draft message, if implied
+}
+&nbsp;
+Rules:
+- Only include keys the instruction actually implies. An empty object {} is valid if the instruction is unclear or unrelated to any of these.
+- Do not invent constraints the user didn't state or reasonably imply.`;
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-07-18T05:20:59.346Z
+            </div>
+        <script src="prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="sorter.js"></script>
+        <script src="block-navigation.js"></script>
+    </body>
+</html>
+    
