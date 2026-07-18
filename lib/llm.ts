@@ -34,7 +34,7 @@ function getProvider(): "claude-agent-sdk" | "openrouter" {
   return "claude-agent-sdk";
 }
 
-function stripJsonFences(text: string): string {
+export function stripJsonFences(text: string): string {
   let cleaned = text.trim();
   // Strip ```json ... ``` or ``` ... ``` fences defensively.
   const fenceMatch = cleaned.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
@@ -51,7 +51,7 @@ function stripJsonFences(text: string): string {
 // { or [ and returns through its matching close brace/bracket (string- and
 // escape-aware), so a stray sentence around otherwise-valid JSON no longer
 // fails the whole request.
-function extractJsonCandidate(text: string): string {
+export function extractJsonCandidate(text: string): string {
   const cleaned = stripJsonFences(text).trim();
   if (!cleaned) return cleaned;
 
