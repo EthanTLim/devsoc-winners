@@ -3,6 +3,7 @@ import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/sonner";
+import { SessionSync } from "@/components/session-sync";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const fraunces = Fraunces({
@@ -27,6 +28,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased">
         {children}
         <Toaster />
+        <SessionSync />
       </body>
     </html>
   );
