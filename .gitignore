@@ -25,3 +25,4 @@ npm-debug.log*
 
 # Local Claude Code config (machine-specific, may contain keys)
 .claude/
+coverage/
